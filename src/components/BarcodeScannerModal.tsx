@@ -51,6 +51,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraCaptureInputRef = useRef<HTMLInputElement | null>(null);
+  const liveDetectorTimerRef = useRef<any>(null);
   const scannerContainerId = 'pantry-guard-barcode-reader';
 
   // Popular grocery barcodes with real global EANs
@@ -283,16 +284,18 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       const scanner = new Html5Qrcode(scannerContainerId, {
         formatsToSupport: formats,
         verbose: false,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true,
+        },
       });
       html5QrCodeRef.current = scanner;
 
-      // Clean, mobile-resilient configuration without restrictive min/max constraints
+      // Clean, mobile-resilient configuration with wide 1D barcode scanning area
       const config = {
-        fps: 20,
+        fps: 25,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const edge = Math.min(viewfinderWidth, viewfinderHeight);
-          const width = Math.min(Math.floor(edge * 0.90), 320);
-          const height = Math.min(Math.floor(width * 0.65), 220);
+          const width = Math.min(Math.floor(viewfinderWidth * 0.94), 480);
+          const height = Math.min(Math.floor(viewfinderHeight * 0.55), 260);
           return { width, height };
         },
       };
@@ -319,7 +322,6 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         try {
           const cameras = await Html5Qrcode.getCameras();
           if (cameras && cameras.length > 0) {
-            // Find rear/environment camera or pick last camera (usually back camera on smartphones)
             const rearCam =
               cameras.find((c) =>
                 c.label.toLowerCase().includes('back') ||
@@ -367,6 +369,38 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         videoEl.play().catch(() => {});
       }
 
+      // Turbo Real-time Hardware Barcode Stream Detector (Ultra-fast 100ms continuous frame inspection)
+      if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+        try {
+          const nativeDetector = new (window as any).BarcodeDetector({
+            formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code'],
+          });
+
+          if (liveDetectorTimerRef.current) {
+            clearInterval(liveDetectorTimerRef.current);
+          }
+
+          liveDetectorTimerRef.current = setInterval(async () => {
+            const video = document.querySelector<HTMLVideoElement>(`#${scannerContainerId} video`);
+            if (video && video.readyState >= 2 && !video.paused && !video.ended) {
+              try {
+                const detected = await nativeDetector.detect(video);
+                if (detected && detected.length > 0) {
+                  const raw = detected[0].rawValue || detected[0].displayValue;
+                  if (raw && raw.trim()) {
+                    handleProcessBarcode(raw.trim());
+                  }
+                }
+              } catch {
+                // Ignore dropped frame
+              }
+            }
+          }, 90);
+        } catch {
+          // Native detector setup skipped
+        }
+      }
+
       setIsScanning(true);
     } catch (err: any) {
       console.warn('Camera scan initialization notice:', err);
@@ -403,10 +437,14 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
     const timer = setTimeout(() => {
       initCamera();
-    }, 150);
+    }, 120);
 
     return () => {
       clearTimeout(timer);
+      if (liveDetectorTimerRef.current) {
+        clearInterval(liveDetectorTimerRef.current);
+        liveDetectorTimerRef.current = null;
+      }
       const scanner = html5QrCodeRef.current;
       html5QrCodeRef.current = null;
       if (scanner) {

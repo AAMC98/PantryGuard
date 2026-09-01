@@ -72,16 +72,24 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/**
- * Fast client-side 1D Barcode Detection (No noisy microQR sub-readers)
- */
 async function scanClient1DBarcodes(file: File): Promise<string | null> {
+  // 1. Try Html5Qrcode high-speed image scanning engine
+  try {
+    const html5Qr = new Html5Qrcode('pantry-guard-barcode-reader', { verbose: false });
+    const result = await html5Qr.scanFile(file, false);
+    if (result && result.trim()) {
+      return result.trim();
+    }
+  } catch {
+    // Continue to next decoders
+  }
+
   const imageUrl = URL.createObjectURL(file);
 
   try {
     const img = await loadImage(imageUrl);
 
-    // 1. Native window.BarcodeDetector
+    // 2. Native window.BarcodeDetector (Hardware-accelerated on Android Chrome & iOS 17+)
     if ('BarcodeDetector' in window) {
       try {
         const detector = new (window as any).BarcodeDetector({
@@ -95,11 +103,11 @@ async function scanClient1DBarcodes(file: File): Promise<string | null> {
           }
         }
       } catch {
-        // Continue to canvas pass
+        // Continue
       }
     }
 
-    // 2. MultiFormatReader restricted ONLY to 1D barcodes
+    // 3. MultiFormatReader ZXing pass
     const hints = new Map<DecodeHintType, any>();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [
       BarcodeFormat.EAN_13,
@@ -118,7 +126,7 @@ async function scanClient1DBarcodes(file: File): Promise<string | null> {
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return null;
 
-    const maxDim = 1000;
+    const maxDim = 800;
     let width = img.naturalWidth;
     let height = img.naturalHeight;
     let scale = 1;
@@ -143,7 +151,7 @@ async function scanClient1DBarcodes(file: File): Promise<string | null> {
         return res.getText().trim();
       }
     } catch {
-      // Not found on standard pass
+      // Not found
     }
 
     return null;

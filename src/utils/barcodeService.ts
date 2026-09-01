@@ -249,6 +249,8 @@ function mapToStorageLocation(category: ProductCategory, isCanned = false): Stor
  * 3. Live Open Food Facts Global API
  * 4. Fallback smart estimator
  */
+const MEM_CACHE: Record<string, BarcodeLookupResult> = {};
+
 export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResult> {
   const cleanCode = barcode.trim();
   if (!cleanCode) {
@@ -259,12 +261,17 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
     };
   }
 
+  // 0. Check in-memory fast cache
+  if (MEM_CACHE[cleanCode]) {
+    return MEM_CACHE[cleanCode];
+  }
+
   // 1. Check user learned memory first (personal customization)
   const learned = getLearnedBarcodes();
   if (learned[cleanCode]) {
     const item = learned[cleanCode];
     const category = item.category || 'otros';
-    return {
+    const res: BarcodeLookupResult = {
       found: true,
       name: item.name || '',
       category,
@@ -278,13 +285,15 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
       barcode: cleanCode,
       source: 'learned',
     };
+    MEM_CACHE[cleanCode] = res;
+    return res;
   }
 
   // 2. Check local instant catalog
   if (BARCODE_CATALOG[cleanCode]) {
     const item = BARCODE_CATALOG[cleanCode];
     const category = (item.category as ProductCategory) || 'otros';
-    return {
+    const res: BarcodeLookupResult = {
       found: true,
       name: item.name,
       category,
@@ -295,12 +304,14 @@ export async function lookupBarcode(barcode: string): Promise<BarcodeLookupResul
       barcode: cleanCode,
       source: 'catalog',
     };
+    MEM_CACHE[cleanCode] = res;
+    return res;
   }
 
-  // 3. Live Query to Open Food Facts Global Database
+  // 3. Live Query to Open Food Facts Global Database (Fast 2.5s timeout)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     const response = await fetch(
       `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(cleanCode)}.json`,
