@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --color-primary: #004a21;
+    --color-primary-container: #096430;
+    --color-on-primary: #ffffff;
+    --color-on-primary-container: #8dde9d;
+    --color-secondary: #9f4200;
+    --color-secondary-container: #ff7a2b;
+    --color-tertiary: #003d87;
+    --color-tertiary-container: #0353b3;
+    --color-error: #ba1a1a;
+    --color-error-container: #ffdad6;
+    --color-surface: #f8f9ff;
+    --color-on-surface: #191c20;
+    --color-on-surface-variant: #404940;
+    --color-outline: #707a6f;
+    --color-outline-variant: #bfc9bd;
+  }
+
+  .dark {
+    --color-primary: #87d897;
+    --color-primary-container: #005225;
+    --color-on-primary: #00210b;
+    --color-on-primary-container: #a2f5b2;
+    --color-surface: #111318;
+    --color-on-surface: #e1e2e8;
+    --color-on-surface-variant: #bfc9bd;
+    --color-outline: #8a9389;
+    --color-outline-variant: #404940;
+  }
+
+  html, body {
+    overscroll-behavior-y: none;
+  }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+}
+
+/* iOS & Android Safe Area Padding Helpers */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+.fill-icon {
+  font-variation-settings: 'FILL' 1;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+@keyframes scan-animation {
+  0% { top: 0%; opacity: 0.8; }
+  50% { top: 96%; opacity: 1; }
+  100% { top: 0%; opacity: 0.8; }
+}
+
+.animate-scan-line {
+  animation: scan-animation 2.2s ease-in-out infinite;
+}
+
+/* Html5Qrcode video container containment */
+#pantry-guard-barcode-reader {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  overflow: hidden !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  background-color: #000 !important;
+}
+
+#pantry-guard-barcode-reader video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#pantry-guard-barcode-reader canvas {
+  display: none !important;
+}
+
+#pantry-guard-barcode-reader img {
+  display: none !important;
+}
