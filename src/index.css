@@ -33,14 +33,12 @@
     --color-outline-variant: #404940;
   }
 
-  html, body {
-    overscroll-behavior-y: none;
-  }
   body {
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    overscroll-behavior-y: none;
   }
 }
 
@@ -68,7 +66,6 @@
   word-wrap: normal;
   direction: ltr;
   -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }
 

@@ -50,6 +50,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraCaptureInputRef = useRef<HTMLInputElement | null>(null);
   const scannerContainerId = 'pantry-guard-barcode-reader';
 
   // Popular grocery barcodes with real global EANs
@@ -71,13 +72,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       if (scanner.isScanning) {
         await scanner.stop();
       }
-    } catch {
-      // Ignore already stopped or abort error
-    }
-    try {
       scanner.clear();
     } catch {
-      // Ignore clear error
+      // Ignore cleanup error
     }
   };
 
@@ -157,11 +154,12 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     setIsResolving(true);
 
     // Pause scanner visual
-    const scanner = html5QrCodeRef.current;
-    if (scanner && scanner.isScanning) {
-      try {
-        await scanner.pause(true);
-      } catch {}
+    try {
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        html5QrCodeRef.current.pause();
+      }
+    } catch {
+      // Continue
     }
 
     try {
@@ -244,6 +242,28 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
     setCameraError(null);
     setIsScanning(false);
 
+    // 1. Check for Secure Context (HTTPS or localhost)
+    const isSecure =
+      typeof window !== 'undefined' &&
+      (window.isSecureContext ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1');
+
+    const hasMediaDevices =
+      typeof navigator !== 'undefined' &&
+      !!navigator.mediaDevices &&
+      typeof navigator.mediaDevices.getUserMedia === 'function';
+
+    if (!isSecure && !hasMediaDevices) {
+      setCameraError(
+        isSpanish
+          ? 'Los navegadores móviles requieren HTTPS (o localhost) para transmitir video en vivo. Puedes usar "Tomar Foto con Cámara" para escanear con la cámara nativa de tu celular.'
+          : 'Mobile browsers require HTTPS for live video streams. Use "Take Photo with Camera" to scan using your phone\'s native camera.'
+      );
+      setIsScanning(false);
+      return;
+    }
+
     try {
       const formats = [
         Html5QrcodeSupportedFormats.EAN_13,
@@ -266,16 +286,20 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       });
       html5QrCodeRef.current = scanner;
 
+      // Clean, mobile-resilient configuration without restrictive min/max constraints
       const config = {
-        fps: 15,
+        fps: 20,
         qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
           const edge = Math.min(viewfinderWidth, viewfinderHeight);
-          const width = Math.min(Math.floor(edge * 0.88), 340);
-          const height = Math.min(Math.floor(width * 0.62), 220);
+          const width = Math.min(Math.floor(edge * 0.90), 320);
+          const height = Math.min(Math.floor(width * 0.65), 220);
           return { width, height };
         },
       };
 
+      let started = false;
+
+      // Attempt 1: Standard facingMode object
       try {
         await scanner.start(
           { facingMode: facingMode },
@@ -285,8 +309,42 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           },
           () => {}
         );
-      } catch (startErr) {
-        // Fallback for older iOS versions that prefer simple string facingMode
+        started = true;
+      } catch (err1: any) {
+        console.warn('FacingMode object start attempt failed, attempting fallback:', err1);
+      }
+
+      // Attempt 2: Direct camera enumeration from device
+      if (!started) {
+        try {
+          const cameras = await Html5Qrcode.getCameras();
+          if (cameras && cameras.length > 0) {
+            // Find rear/environment camera or pick last camera (usually back camera on smartphones)
+            const rearCam =
+              cameras.find((c) =>
+                c.label.toLowerCase().includes('back') ||
+                c.label.toLowerCase().includes('rear') ||
+                c.label.toLowerCase().includes('environment') ||
+                c.label.toLowerCase().includes('trasera')
+              ) || cameras[cameras.length - 1];
+
+            await scanner.start(
+              rearCam.id,
+              config,
+              (decodedText) => {
+                handleProcessBarcode(decodedText);
+              },
+              () => {}
+            );
+            started = true;
+          }
+        } catch (err2) {
+          console.warn('Camera device enumeration failed:', err2);
+        }
+      }
+
+      // Attempt 3: Direct facingMode string fallback
+      if (!started) {
         await scanner.start(
           facingMode as any,
           config,
@@ -295,22 +353,44 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           },
           () => {}
         );
+        started = true;
       }
 
-      // Ensure playsinline and webkit attributes are present for iOS Safari
+      // Ensure playsinline, webkit-playsinline and muted attributes for iOS Safari
       const videoEl = document.querySelector<HTMLVideoElement>(`#${scannerContainerId} video`);
       if (videoEl) {
         videoEl.setAttribute('playsinline', 'true');
         videoEl.setAttribute('webkit-playsinline', 'true');
         videoEl.setAttribute('muted', 'true');
+        videoEl.setAttribute('autoplay', 'true');
         videoEl.muted = true;
+        videoEl.play().catch(() => {});
       }
 
       setIsScanning(true);
     } catch (err: any) {
       console.warn('Camera scan initialization notice:', err);
-      const errMsg = err?.message || err?.name || String(err);
-      setCameraError(`No se pudo acceder a la cámara. Revisa los permisos. (Error: ${errMsg})`);
+      const errMsg = (err?.message || err?.name || '').toString().toLowerCase();
+
+      if (errMsg.includes('notallowed') || errMsg.includes('permission') || errMsg.includes('denied')) {
+        setCameraError(
+          isSpanish
+            ? 'Permiso de cámara denegado. Permite el acceso a la cámara en los permisos de tu navegador o usa "Tomar Foto con Cámara".'
+            : 'Camera permission denied. Please allow camera access in your browser settings or use "Take Photo with Camera".'
+        );
+      } else if (!isSecure) {
+        setCameraError(
+          isSpanish
+            ? 'Los navegadores móviles requieren conexión HTTPS (o localhost) para video en vivo. Puedes usar "Tomar Foto con Cámara" para escanear con la cámara nativa de tu celular.'
+            : 'Mobile browsers require HTTPS for live video streaming. Use "Take Photo with Camera" below!'
+        );
+      } else {
+        setCameraError(
+          isSpanish
+            ? 'No se pudo iniciar la cámara en vivo en este dispositivo. Puedes tomar una foto con la cámara nativa o subir una imagen.'
+            : 'Could not initialize live camera. You can snap a photo with your native camera or upload an image.'
+        );
+      }
       setIsScanning(false);
     }
   };
@@ -421,7 +501,17 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#0c0e12] flex flex-col justify-between overflow-hidden h-[100dvh] w-screen select-none">
-      {/* Hidden file input for barcode image upload */}
+      {/* Hidden file input for direct native mobile camera capture */}
+      <input
+        ref={cameraCaptureInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleImageUpload}
+      />
+
+      {/* Hidden file input for gallery photo upload */}
       <input
         ref={fileInputRef}
         type="file"
@@ -450,32 +540,50 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         )}
 
         {cameraError && !imageDecodingStatus && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-black/90 z-10 pointer-events-auto">
-            <div className="w-16 h-16 rounded-full bg-[#ff7a2b]/20 flex items-center justify-center mb-3 text-[#ff7a2b]">
-              <span className="material-symbols-outlined text-4xl">videocam_off</span>
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-black/95 z-10 pointer-events-auto">
+            <div className="w-16 h-16 rounded-full bg-[#87d897]/20 flex items-center justify-center mb-3 text-[#87d897]">
+              <span className="material-symbols-outlined text-4xl">photo_camera</span>
             </div>
             <p className="text-white text-base font-bold max-w-sm mb-1.5">
-              Cámara no disponible en este dispositivo
+              {isSpanish ? 'Escanear con Cámara de Celular' : 'Scan with Mobile Camera'}
             </p>
-            <p className="text-white/70 text-xs max-w-xs mb-5">
-              Puedes subir una foto del código de barras, probar con productos de muestra o escribir el código.
+            <p className="text-white/80 text-xs max-w-xs mb-5 leading-relaxed">
+              {cameraError}
             </p>
             <div className="flex flex-col gap-2.5 w-full max-w-xs">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-2.5 px-4 bg-white/20 hover:bg-white/30 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 border border-white/20"
+                onClick={() => cameraCaptureInputRef.current?.click()}
+                className="w-full py-3 px-4 bg-[#87d897] hover:bg-[#68c77b] text-[#00210b] font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-95"
               >
-                <span className="material-symbols-outlined text-[18px]">photo_camera</span>
-                <span>Subir foto de código</span>
+                <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                <span>{isSpanish ? 'Tomar Foto con Cámara' : 'Take Photo with Camera'}</span>
               </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="py-2.5 px-3 bg-white/15 hover:bg-white/25 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-white/20 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[16px]">photo_library</span>
+                  <span>{isSpanish ? 'Galería' : 'Gallery'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setManualModalOpen(true)}
+                  className="py-2.5 px-3 bg-white/15 hover:bg-white/25 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 border border-white/20 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[16px]">keyboard</span>
+                  <span>{isSpanish ? 'Código' : 'Manual'}</span>
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => handleSimulate()}
-                className="w-full py-2.5 px-4 bg-[#004a21] hover:bg-[#096430] text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 shadow-md"
+                className="w-full py-2 px-3 text-white/70 hover:text-white font-medium text-[11px] flex items-center justify-center gap-1 mt-1"
               >
-                <span className="material-symbols-outlined text-[18px]">bolt</span>
-                <span>Escanear producto de prueba</span>
+                <span className="material-symbols-outlined text-[14px] text-[#87d897]">bolt</span>
+                <span>{isSpanish ? 'O probar con un producto de muestra' : 'Or try a sample product'}</span>
               </button>
             </div>
           </div>
@@ -717,23 +825,32 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       {!scannedResult && (
         <div className="relative z-20 px-4 py-4 pb-[env(safe-area-inset-bottom,20px)] flex flex-col gap-2.5 max-w-md mx-auto w-full bg-gradient-to-t from-black/90 via-black/50 to-transparent">
           
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => cameraCaptureInputRef.current?.click()}
+              className="py-2.5 px-2 rounded-xl bg-[#87d897] hover:bg-[#68c77b] active:scale-95 text-[#00210b] font-bold text-xs flex items-center justify-center gap-1 shadow-md transition-all"
+            >
+              <span className="material-symbols-outlined text-[17px]">photo_camera</span>
+              <span className="truncate">{isSpanish ? 'Foto' : 'Photo'}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="py-2.5 px-3 rounded-xl bg-white/15 hover:bg-white/25 active:scale-98 backdrop-blur-md border border-white/20 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
+              className="py-2.5 px-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 backdrop-blur-md border border-white/20 text-white font-semibold text-xs flex items-center justify-center gap-1 transition-all"
             >
-              <span className="material-symbols-outlined text-[18px]">photo_camera</span>
-              <span>Subir Foto</span>
+              <span className="material-symbols-outlined text-[17px]">photo_library</span>
+              <span className="truncate">{isSpanish ? 'Galería' : 'Gallery'}</span>
             </button>
 
             <button
               type="button"
               onClick={() => setManualModalOpen(true)}
-              className="py-2.5 px-3 rounded-xl bg-white/15 hover:bg-white/25 active:scale-98 backdrop-blur-md border border-white/20 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
+              className="py-2.5 px-2 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 backdrop-blur-md border border-white/20 text-white font-semibold text-xs flex items-center justify-center gap-1 transition-all"
             >
-              <span className="material-symbols-outlined text-[18px]">keyboard</span>
-              <span>Código Numérico</span>
+              <span className="material-symbols-outlined text-[17px]">keyboard</span>
+              <span className="truncate">{isSpanish ? 'Código' : 'Code'}</span>
             </button>
           </div>
 

@@ -49,6 +49,7 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
 }) => {
   const isSpanish = preferences.language !== 'en';
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
@@ -222,6 +223,17 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 flex flex-col gap-4">
+          {/* Direct Camera Capture input */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+
+          {/* Gallery file upload input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -240,17 +252,27 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
               </h4>
               <p className="text-xs text-[#707a6f] dark:text-[#bfc9bd] max-w-sm mb-5 leading-relaxed">
                 {isSpanish
-                  ? 'Asegúrate de que la lista de productos y precios esté visible y bien iluminada para máxima precisión.'
+                  ? 'Asegúrate de que la lista de productos y cantidades esté visible e iluminada para máxima precisión con IA.'
                   : 'Make sure the items and quantities are clearly visible and well-lit.'}
               </p>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="py-3 px-6 rounded-full bg-[#004a21] hover:bg-[#096430] text-white font-bold text-sm flex items-center gap-2 shadow-md active:scale-95 transition-transform"
-              >
-                <span className="material-symbols-outlined text-[20px]">photo_camera</span>
-                <span>{isSpanish ? 'Seleccionar Foto del Ticket' : 'Select Receipt Photo'}</span>
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
+                <button
+                  type="button"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="flex-1 py-3 px-4 rounded-full bg-[#004a21] hover:bg-[#096430] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[20px]">photo_camera</span>
+                  <span>{isSpanish ? 'Tomar Foto' : 'Take Photo'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex-1 py-3 px-4 rounded-full bg-[#e1e2e8] dark:bg-[#404940] hover:bg-[#bfc9bd]/50 text-[#191c20] dark:text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-[20px]">photo_library</span>
+                  <span>{isSpanish ? 'Galería' : 'Gallery'}</span>
+                </button>
+              </div>
             </div>
           )}
 

@@ -447,7 +447,7 @@ export default function App() {
   const isSubView = activeTab === 'preferences' || activeTab === 'account';
 
   return (
-    <div className="min-h-dvh bg-[#f8f9ff] dark:bg-[#111418] text-[#191c20] dark:text-[#f8f9ff] flex flex-col font-sans transition-colors duration-150 antialiased selection:bg-[#004a21] selection:text-white">
+    <div className="min-h-screen bg-[#f8f9ff] dark:bg-[#111418] text-[#191c20] dark:text-[#f8f9ff] flex flex-col font-sans transition-colors duration-150 antialiased selection:bg-[#004a21] selection:text-white">
       {/* Top Application Bar */}
       <TopAppBar
         currentTab={activeTab}
@@ -464,7 +464,7 @@ export default function App() {
       />
 
       {/* Main View Area with proper top offset for the fixed header */}
-      <main className="flex-1 flex flex-col pt-[calc(4rem+env(safe-area-inset-top,0px))] pb-28 md:pb-24 w-full">
+      <main className="flex-1 flex flex-col pt-16 pb-28 md:pb-24 w-full">
         {activeTab === 'dashboard' && (
           <DashboardView
             products={products}
