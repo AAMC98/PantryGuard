@@ -121,6 +121,17 @@
   padding: 0 !important;
 }
 
+/* Hide all html5-qrcode injected default overlays, duplicate white boxes and shaded regions */
+#pantry-guard-barcode-reader #qr-shaded-region,
+#pantry-guard-barcode-reader div[id$="__scan_region"],
+#pantry-guard-barcode-reader div[id$="__dashboard_section"],
+#pantry-guard-barcode-reader div[id$="__dashboard_section_csr"],
+#pantry-guard-barcode-reader div[id$="__dashboard_section_swaplink"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 #pantry-guard-barcode-reader canvas {
   display: none !important;
 }

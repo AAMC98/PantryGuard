@@ -290,14 +290,9 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
       });
       html5QrCodeRef.current = scanner;
 
-      // Clean, mobile-resilient configuration with wide 1D barcode scanning area
+      // Full-frame scanning without restrictive cropping + high FPS
       const config = {
-        fps: 25,
-        qrbox: (viewfinderWidth: number, viewfinderHeight: number) => {
-          const width = Math.min(Math.floor(viewfinderWidth * 0.94), 480);
-          const height = Math.min(Math.floor(viewfinderHeight * 0.55), 260);
-          return { width, height };
-        },
+        fps: 30,
       };
 
       let started = false;
@@ -367,9 +362,30 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
         videoEl.setAttribute('autoplay', 'true');
         videoEl.muted = true;
         videoEl.play().catch(() => {});
+
+        // Apply continuous hardware auto-focus & exposure on the camera lens track
+        const stream = videoEl.srcObject as MediaStream;
+        if (stream && stream.getVideoTracks) {
+          const track = stream.getVideoTracks()[0];
+          if (track && track.applyConstraints) {
+            try {
+              const caps: any = track.getCapabilities ? track.getCapabilities() : {};
+              const advancedConstraints: any = {};
+              if (caps.focusMode && (caps.focusMode.includes('continuous') || caps.focusMode.includes('macro'))) {
+                advancedConstraints.focusMode = caps.focusMode.includes('continuous') ? 'continuous' : 'macro';
+              }
+              if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
+                advancedConstraints.exposureMode = 'continuous';
+              }
+              if (Object.keys(advancedConstraints).length > 0) {
+                track.applyConstraints({ advanced: [advancedConstraints] }).catch(() => {});
+              }
+            } catch {}
+          }
+        }
       }
 
-      // Turbo Real-time Hardware Barcode Stream Detector (Ultra-fast 100ms continuous frame inspection)
+      // Turbo Real-time Hardware Barcode Stream Detector (Ultra-fast 40ms continuous 25 FPS frame inspection)
       if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
         try {
           const nativeDetector = new (window as any).BarcodeDetector({
@@ -395,7 +411,7 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
                 // Ignore dropped frame
               }
             }
-          }, 90);
+          }, 40);
         } catch {
           // Native detector setup skipped
         }
@@ -737,17 +753,17 @@ export const BarcodeScannerModal: React.FC<BarcodeScannerModalProps> = ({
           </div>
 
           {/* Reticle Box with Corner Accents */}
-          <div className="relative w-full max-w-[280px] sm:max-w-xs aspect-[4/3] rounded-2xl border border-white/20 overflow-hidden bg-black/25 backdrop-blur-[0.5px] shadow-[0_0_30px_rgba(0,0,0,0.8)]">
-            <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-[#87d897] rounded-tl-xl"></div>
-            <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-[#87d897] rounded-tr-xl"></div>
-            <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-[#87d897] rounded-bl-xl"></div>
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#87d897] rounded-br-xl"></div>
+          <div className="relative w-full max-w-[300px] sm:max-w-[340px] aspect-[16/10] rounded-2xl border border-white/25 overflow-hidden bg-black/10 backdrop-blur-[0.5px] shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+            <div className="absolute top-0 left-0 w-7 h-7 border-t-4 border-l-4 border-[#87d897] rounded-tl-xl"></div>
+            <div className="absolute top-0 right-0 w-7 h-7 border-t-4 border-r-4 border-[#87d897] rounded-tr-xl"></div>
+            <div className="absolute bottom-0 left-0 w-7 h-7 border-b-4 border-l-4 border-[#87d897] rounded-bl-xl"></div>
+            <div className="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-[#87d897] rounded-br-xl"></div>
 
             {/* Laser Line */}
             <div className="absolute left-0 right-0 h-1 bg-[#87d897] shadow-[0_0_14px_4px_rgba(135,216,151,0.9)] animate-scan-line"></div>
 
             {/* Central Barcode Target Visual */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-20">
+            <div className="absolute inset-0 flex items-center justify-center opacity-15">
               <span className="material-symbols-outlined text-6xl text-white">
                 barcode
               </span>
