@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -470,6 +471,17 @@ async function startServer() {
 
   app.use(express.json({ limit: '10mb' }));
 
+  // Rate Limiting (Security & Cost Control)
+  const aiRateLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 20, // 20 requests per IP per hour
+    message: { error: 'Demasiadas peticiones a la IA, intenta de nuevo más tarde.' },
+  });
+  app.use('/api/ai/', aiRateLimiter);
+
+  // In-memory Recipe Cache (Memoria Inteligente)
+  const recipeCache = new Map<string, { data: any; timestamp: number }>();
+
   // API Health Check
   app.get('/api/health', (req, res) => {
     res.json({
@@ -490,6 +502,16 @@ async function startServer() {
       } = req.body;
       const isSpanish = preferences.language !== 'en';
       const now = new Date();
+
+      // Check Cache (Memoria Inteligente)
+      const cacheKey = JSON.stringify({
+        prods: products.map((p: any) => ({ name: p.name, q: p.quantity, loc: p.location })),
+        mealType, customPrompt, lang: preferences.language
+      });
+      const cached = recipeCache.get(cacheKey);
+      if (cached && now.getTime() - cached.timestamp < 1000 * 60 * 60 * 24) { // 24 hours
+        return res.json({ ...cached.data, isCached: true });
+      }
 
       // SAFETY FILTER: Strictly separate valid products from expired products
       const validProducts: any[] = [];
@@ -636,13 +658,18 @@ Genera entre 3 y 4 recetas variadas y apetecibles en formato JSON estructurado s
       });
 
       const parsed = safeExtractJson(response.text, {});
-      return res.json({
+      const resultData = {
         ...parsed,
         expiredItemsIgnoredCount: expiredProducts.length,
         expiringItemsCount: expiringSoonProducts.length,
         lastGeneratedAt: new Date().toISOString(),
         aiModel: modelUsed,
-      });
+      };
+
+      // Save to Cache
+      recipeCache.set(cacheKey, { data: resultData, timestamp: now.getTime() });
+
+      return res.json(resultData);
     } catch (err: any) {
       console.warn('AI recipe generation error, falling back to local generator:', err?.message || err);
       const now = new Date();
