@@ -33,27 +33,27 @@ Pantry Guard es una solución de software (PWA / Android / iOS) orientada a reso
 **Requisitos previos:** Node.js (v20 o superior).
 
 1. **Clonar el repositorio:**
-   `ash
+   ```bash
    git clone https://github.com/AAMC98/PantryGuard.git
    cd PantryGuard
-   `
+   ```
 
 2. **Instalar dependencias:**
-   `ash
+   ```bash
    npm install
-   `
+   ```
 
 3. **Configurar las variables de entorno:**
-   Crea un archivo llamado .env en la raíz del proyecto y agrega tu llave de Google AI Studio:
-   `env
+   Crea un archivo llamado `.env` en la raíz del proyecto y agrega tu llave de Google AI Studio:
+   ```env
    GEMINI_API_KEY="TU_LLAVE_SECRETA_AQUI"
-   `
+   ```
 
 4. **Levantar el entorno de desarrollo (con recarga rápida):**
-   `ash
+   ```bash
    npm run dev
-   `
-   El servidor frontend y backend se ejecutarán simultáneamente en http://localhost:3000.
+   ```
+   El servidor frontend y backend se ejecutarán simultáneamente en `http://localhost:3000`.
 
 ---
 
@@ -61,11 +61,11 @@ Pantry Guard es una solución de software (PWA / Android / iOS) orientada a reso
 
 Para generar la versión optimizada de producción y sincronizar los assets con Android Studio:
 
-`ash
+```bash
 npm run build
 npx cap sync android
-`
-Posteriormente, puedes abrir la carpeta ndroid en Android Studio para compilar y firmar el APK.
+```
+Posteriormente, puedes abrir la carpeta `android` en Android Studio para compilar y firmar el APK.
 
 ---
 
