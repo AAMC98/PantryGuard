@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Manual de Usuario — Pantry Guard</title>
+  <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  @page {
+    size: letter portrait;
+    margin: 20mm 18mm 20mm 18mm;
+    @bottom-right {
+      content: counter(page);
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #191c20;
+    line-height: 1.6;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid;
+  }
+
+  /* Cover Page Styling */
+  .cover-page {
+    height: 92vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 30px 20px;
+    border-left: 8px solid #004a21;
+    background: linear-gradient(135deg, #f8fbf9 0%, #ffffff 100%);
+  }
+
+  .cover-header {
+    margin-top: 10px;
+  }
+
+  .institution-badge {
+    display: inline-block;
+    background: #e8f5e9;
+    color: #004a21;
+    font-size: 9pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid #c8e6c9;
+  }
+
+  .cover-body {
+    margin: auto 0;
+  }
+
+  .project-tag {
+    color: #096430;
+    font-size: 14pt;
+    font-weight: 700;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  .cover-title {
+    font-size: 28pt;
+    font-weight: 800;
+    color: #0c1a11;
+    line-height: 1.15;
+    margin: 0 0 16px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .cover-subtitle {
+    font-size: 14pt;
+    font-weight: 400;
+    color: #404940;
+    line-height: 1.5;
+    max-width: 600px;
+    margin-bottom: 24px;
+  }
+
+  .divider-line {
+    width: 80px;
+    height: 4px;
+    background: #004a21;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+
+  .cover-meta-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    background: #f1f4f1;
+    padding: 18px;
+    border-radius: 12px;
+    border: 1px solid #e1e5e1;
+    max-width: 550px;
+  }
+
+  .meta-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .meta-label {
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #606860;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .meta-value {
+    font-size: 9.5pt;
+    font-weight: 600;
+    color: #191c20;
+    margin-top: 2px;
+  }
+
+  .cover-footer {
+    border-top: 1px solid #e1e5e1;
+    padding-top: 15px;
+    font-size: 8.5pt;
+    color: #707a6f;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Document Typography */
+  h1 {
+    font-size: 18pt;
+    font-weight: 800;
+    color: #004a21;
+    margin-top: 26px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid #e0e8e2;
+    padding-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  h2 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #096430;
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  h3 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #1e261f;
+    margin-top: 14px;
+    margin-bottom: 6px;
+  }
+
+  p {
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: justify;
+  }
+
+  ul, ol {
+    margin-top: 4px;
+    margin-bottom: 12px;
+    padding-left: 22px;
+  }
+
+  li {
+    margin-bottom: 5px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 18px 0;
+    font-size: 9pt;
+  }
+
+  th {
+    background: #004a21;
+    color: #ffffff;
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #004a21;
+  }
+
+  td {
+    padding: 8px 10px;
+    border: 1px solid #e1e5e1;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td {
+    background: #f8faf8;
+  }
+
+  /* Code and Technical Blocks */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5pt;
+    background: #f1f4f1;
+    color: #004a21;
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid #e2e6e2;
+  }
+
+  pre {
+    background: #111417;
+    color: #e1e2e8;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8pt;
+    padding: 12px 14px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 12px 0 16px 0;
+    border: 1px solid #282b30;
+    line-height: 1.45;
+  }
+
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+  }
+
+  /* Callout Boxes */
+  .callout {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 12px 0 16px 0;
+    border-left: 4px solid;
+    font-size: 9.5pt;
+  }
+
+  .callout-info {
+    background: #eef5fc;
+    border-color: #0353b3;
+    color: #002e69;
+  }
+
+  .callout-success {
+    background: #edf7ed;
+    border-color: #096430;
+    color: #003a19;
+  }
+
+  .callout-warning {
+    background: #fff8e1;
+    border-color: #f57c00;
+    color: #793800;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 12px;
+    font-size: 8pt;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .badge-success { background: #d4eed8; color: #004a21; }
+  .badge-warning { background: #ffe0b2; color: #9f4200; }
+  .badge-danger { background: #ffdad6; color: #ba1a1a; }
+  .badge-info { background: #d0e4ff; color: #003d87; }
+
+  /* Table of Contents */
+  .toc {
+    background: #f8fbf9;
+    border: 1px solid #ddecde;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0 30px 0;
+  }
+
+  .toc-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: #004a21;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px dotted #ccc;
+    font-size: 9.5pt;
+  }
+
+  .toc-item a {
+    text-decoration: none;
+    color: #191c20;
+    font-weight: 500;
+  }
+
+  .footer-stamp {
+    text-align: center;
+    font-size: 8pt;
+    color: #8a938a;
+    margin-top: 30px;
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- PORTADA -->
+  <div class="cover-page">
+    <div class="cover-header">
+      <span class="institution-badge">Universidad Autónoma de Nayarit • Guía de Operación</span>
+    </div>
+
+    <div class="cover-body">
+      <div class="project-tag">Documentación Externa / Guía del Usuario Final</div>
+      <h1 class="cover-title">Pantry Guard</h1>
+      <div class="divider-line"></div>
+      <div class="cover-subtitle">
+        Manual de Usuario: Gestión Inteligente de Despensa, Escaneo de Alimentos, Semáforo de Caducidad y Cocina Cero Desperdicio con Inteligencia Artificial
+      </div>
+
+      <div class="cover-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Público Destinatario</span>
+          <span class="meta-value">Usuarios Finales, Familias y Hogares</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Plataformas de Acceso</span>
+          <span class="meta-value">iPhone (iOS), Celulares Android y PC</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Modalidad de Uso</span>
+          <span class="meta-value">Aplicación Web Progresiva (PWA / App Instalable)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Costo / Licencia</span>
+          <span class="meta-value">100% Gratuito y Libre</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cover-footer">
+      <span>Pantry Guard v1.0 • Despensa Inteligente</span>
+      <span>Actualizado: Septiembre 2026</span>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ÍNDICE -->
+  <h1>Tabla de Contenidos</h1>
+  <div class="toc">
+    <div class="toc-title">Contenido del Manual de Usuario</div>
+    <ul class="toc-list">
+      <li class="toc-item"><span>1. ¿Qué es Pantry Guard y Cómo te Ayuda?</span> <span>Pág. 2</span></li>
+      <li class="toc-item"><span>2. Cómo Instalar la Aplicación en tu Celular (iOS y Android)</span> <span>Pág. 2</span></li>
+      <li class="toc-item"><span>3. Pantalla Principal y Exploración de tu Despensa</span> <span>Pág. 3</span></li>
+      <li class="toc-item"><span>4. El Semáforo Inteligente de Caducidades</span> <span>Pág. 4</span></li>
+      <li class="toc-item"><span>5. Cómo Escanear Códigos de Barras con la Cámara</span> <span>Pág. 5</span></li>
+      <li class="toc-item"><span>6. Cómo Escanear Tickets de Compra con Inteligencia Artificial</span> <span>Pág. 6</span></li>
+      <li class="toc-item"><span>7. Cocinar con el Chef IA Cero Desperdicio</span> <span>Pág. 7</span></li>
+      <li class="toc-item"><span>8. Control de la Lista de Compras</span> <span>Pág. 8</span></li>
+      <li class="toc-item"><span>9. Preguntas Frecuentes y Consejos Prácticos</span> <span>Pág. 9</span></li>
+    </ul>
+  </div>
+
+  <!-- CAPÍTULO 1 -->
+  <h1>1. ¿Qué es Pantry Guard y Cómo te Ayuda?</h1>
+  <p>
+    <strong>Pantry Guard</strong> es tu asistente digital personal para la cocina. Su objetivo es muy sencillo pero poderoso: <strong>evitar que la comida se eche a perder en tu refrigerador y ahorrarte dinero</strong> cada vez que vas al supermercado o cocinas en casa.
+  </p>
+  <div class="callout callout-success avoid-break">
+    <strong>Beneficios Clave en tu Vida Diaria:</strong>
+    <ul>
+      <li>Sabes con certeza qué tienes en casa cuando estás en la tienda, evitando compras dobles.</li>
+      <li>Alertas visuales claras antes de que los alimentos alcancen su fecha de vencimiento.</li>
+      <li>Recetas generadas al instante con los ingredientes que ya tienes en tus estantes.</li>
+    </ul>
+  </div>
+
+  <!-- CAPÍTULO 2 -->
+  <h1>2. Cómo Instalar la Aplicación en tu Celular</h1>
+  <p>Pantry Guard está construida como una <em>Aplicación Web Progresiva</em>. No necesitas descargarla forzosamente desde una tienda de apps; puedes instalarla directamente desde tu navegador:</p>
+
+  <div class="avoid-break">
+    <h3>📱 En iPhone / iPad (Safari):</h3>
+    <ol>
+      <li>Abre el enlace de tu aplicación en el navegador <strong>Safari</strong>.</li>
+      <li>Toca el botón <strong>Compartir</strong> (el icono cuadrado con una flecha hacia arriba en la barra inferior).</li>
+      <li>Desliza hacia abajo en el menú y selecciona <strong>"Agregar a la pantalla de inicio"</strong>.</li>
+      <li>Toca <strong>"Agregar"</strong> arriba a la derecha. Listo, verás el icono de Pantry Guard en tu pantalla principal.</li>
+    </ol>
+  </div>
+
+  <div class="avoid-break">
+    <h3>🤖 En Celulares Android (Google Chrome):</h3>
+    <ol>
+      <li>Abre el enlace en <strong>Google Chrome</strong>.</li>
+      <li>Toca los <strong>tres puntos</strong> en la esquina superior derecha.</li>
+      <li>Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Añadir a pantalla de inicio"</strong>.</li>
+      <li>Confirma la instalación y ábrela como cualquier app nativa.</li>
+    </ol>
+  </div>
+
+  <!-- CAPÍTULO 3 -->
+  <div class="page-break"></div>
+  <h1>3. Pantalla Principal y Exploración de tu Despensa</h1>
+  <p>Al abrir la app, te encuentras con la vista central de tu inventario doméstico:</p>
+
+  <ul>
+    <li><strong>Barra de Búsqueda Rápida:</strong> Escribe cualquier letra o nombre (ej. <em>"huevos"</em>, <em>"leche"</em>) y los resultados se filtran al instante.</li>
+    <li><strong>Filtros por Ubicación:</strong> Puedes alternar entre <em>Refrigerador</em>, <em>Alacena</em>, <em>Frutero</em> o <em>Congelador</em> para revisar exactamente un área de tu cocina.</li>
+    <li><strong>Filtros por Categoría:</strong> Botones rápidos para ver solo lácteos, carnes, frutas, verduras, granos o bebidas.</li>
+    <li><strong>Botón "+ Agregar":</strong> Te permite registrar manualmente cualquier alimento casero o producto sin código de barras (como panadería o frutas a granel).</li>
+  </ul>
+
+  <!-- CAPÍTULO 4 -->
+  <h1>4. El Semáforo Inteligente de Caducidades</h1>
+  <p>Pantry Guard analiza continuamente las fechas de vencimiento de cada producto registrado y coloca un indicador de color en la tarjeta para que sepas qué urge consumir primero:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Estado</th>
+        <th>Color del Borde</th>
+        <th>Significado y Acción Recomendada</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-success">Vigente</span></td>
+        <td>Borde Verde</td>
+        <td>El alimento está fresco y seguro. Le quedan más de 5 días de margen de consumo.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-warning">Próximo a Vencer</span></td>
+        <td>Borde Naranja</td>
+        <td>Le quedan entre 1 y 5 días. <strong>Prioridad alta para cocinar hoy mismo</strong>.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-danger">Caducado</span></td>
+        <td>Borde Rojo</td>
+        <td>El alimento superó su fecha recomendada. Revisa su estado o descártalo por seguridad de salud.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- CAPÍTULO 5 -->
+  <div class="page-break"></div>
+  <h1>5. Cómo Escanear Códigos de Barras con la Cámara</h1>
+  <p>Registrar alimentos a mano puede ser lento. Por eso, el escáner con cámara automática de Pantry Guard lo hace en segundos:</p>
+
+  <ol>
+    <li>Toca el botón circular verde con el icono de <strong>código de barras</strong> en la parte superior.</li>
+    <li>Apunta la cámara del celular al código de barras de cualquier envase, caja o lata a una distancia de <strong>10 a 15 centímetros</strong>.</li>
+    <li>La aplicación emitirá un sonido y vibrará cuando reconozca el código automáticamente.</li>
+    <li>Se abrirá una tarjeta con el nombre del producto, marca, foto oficial y días estimados de caducidad.</li>
+    <li>Toca <strong>"Guardar en Despensa"</strong> y listo.</li>
+  </ol>
+
+  <div class="callout callout-success avoid-break">
+    <strong>🛒 Modo Supermercado (Escaneo Continuo):</strong><br>
+    Si llegas de hacer la compra mensual y tienes 15 productos por registrar, activa el botón <em>"Modo Supermercado"</em> arriba a la derecha del escáner. Podrás pasar un producto tras otro frente a la cámara sin que se cierre, sumándolos todos de manera continua.
+  </div>
+
+  <!-- CAPÍTULO 6 -->
+  <h1>6. Cómo Escanear Tickets de Compra con Inteligencia Artificial</h1>
+  <p>Si prefieres no escanear producto por producto, puedes capturar tu recibo de la tienda:</p>
+
+  <ol>
+    <li>Toca el botón con el icono de <strong>Ticket</strong> en la barra superior.</li>
+    <li>Elige <strong>"Tomar Foto"</strong> con tu cámara o sube una imagen de tu galería.</li>
+    <li>Asegúrate de que la foto tenga buena luz y se lean los nombres de los productos.</li>
+    <li>La Inteligencia Artificial de Gemini procesará el ticket en segundos y te mostrará una lista completa de lo que compraste.</li>
+    <li>Puedes desmarcar cualquier producto que no quieras guardar y pulsar <strong>"Importar a Despensa"</strong> para guardarlos todos de golpe.</li>
+  </ol>
+
+  <!-- CAPÍTULO 7 -->
+  <div class="page-break"></div>
+  <h1>7. Cocinar con el Chef IA Cero Desperdicio</h1>
+  <p>¿Llegas a casa cansado y no sabes qué preparar de comer? El Chef IA está diseñado para responder a esa pregunta sin hacerte gastar dinero extra:</p>
+
+  <ol>
+    <li>En la barra de navegación inferior, entra a la pestaña <strong>"Chef IA"</strong>.</li>
+    <li>La inteligencia artificial analizará los ingredientes que tienes registrados en casa, seleccionando primero los que tienen borde naranja (próximos a caducar).</li>
+    <li>Explora las recetas divididas en:
+      <ul>
+        <li><strong>Desayunos Nutritivos</strong></li>
+        <li><strong>Almuerzos y Cenas Completas</strong></li>
+        <li><strong>Exprés (< 15 minutos):</strong> Preparaciones rápidas para días con poco tiempo.</li>
+        <li><strong>Postres y Snacks de Rescate:</strong> Ideas para aprovechar fruta madura o lácteos.</li>
+      </ul>
+    </li>
+    <li>Toca cualquier receta para ver el modo de cocina paso a paso, los ingredientes que ya tienes y un botón para mandar a la lista de compras cualquier ingrediente secundario que te falte.</li>
+  </ol>
+
+  <!-- CAPÍTULO 8 -->
+  <h1>8. Control de la Lista de Compras</h1>
+  <p>La pestaña <strong>"Lista de Compras"</strong> te ayuda a mantener el orden en el supermercado:</p>
+  <ul>
+    <li>Puedes agregar productos manualmente escribiendo su nombre.</li>
+    <li>Al cocinar una receta del Chef IA, los condimentos o ingredientes faltantes se pueden mandar aquí con un solo toque.</li>
+    <li>Cuando estés en el supermercado, toca los cuadritos de verificación para tachar lo que vayas metiendo al carrito de compras.</li>
+  </ul>
+
+  <!-- CAPÍTULO 9 -->
+  <h1>9. Preguntas Frecuentes (FAQ)</h1>
+  <div class="avoid-break">
+    <p><strong>¿Qué pasa si un producto no tiene código de barras (como verduras sueltas)?</strong><br>
+    Usa el botón "+ Agregar Manual" en la despensa; solo tardarás 10 segundos en escribir el nombre y elegir en cuántos días planeas consumirlo.</p>
+
+    <p><strong>¿La aplicación funciona en inglés?</strong><br>
+    Sí, en la barra superior encontrarás un botón para alternar entre Español (ES) e Inglés (EN) en toda la interfaz y en las recetas.</p>
+
+    <p><strong>¿Mis datos o fotos personales se comparten en internet?</strong><br>
+    No. La aplicación protege tu privacidad: las fotos de los recibos solo se analizan de forma efímera para leer los nombres de los productos y se borran inmediatamente.</p>
+  </div>
+
+  <div class="footer-stamp">
+    Pantry Guard — Manual de Usuario • Universidad Autónoma de Nayarit
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "appId": "com.uan.pantryguard",
+  "appName": "Pantry Guard",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
