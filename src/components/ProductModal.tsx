@@ -330,7 +330,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <CustomPickerModal
               isOpen={isCategoryPickerOpen}
               onClose={() => setIsCategoryPickerOpen(false)}
-              title={isSpanish ? 'Seleccionar Categoría' : 'Select Category'}
+              title={preferences.language === 'es' ? 'Seleccionar Categoría' : 'Select Category'}
               selectedValue={category}
               onSelect={(val) => setCategory(val as ProductCategory)}
               options={[
@@ -347,7 +347,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <CustomPickerModal
               isOpen={isUnitPickerOpen}
               onClose={() => setIsUnitPickerOpen(false)}
-              title={isSpanish ? 'Seleccionar Unidad' : 'Select Unit'}
+              title={preferences.language === 'es' ? 'Seleccionar Unidad' : 'Select Unit'}
               selectedValue={unit}
               onSelect={(val) => setUnit(val as UnitType)}
               options={[
@@ -366,7 +366,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <CustomPickerModal
               isOpen={isLocationPickerOpen}
               onClose={() => setIsLocationPickerOpen(false)}
-              title={isSpanish ? 'Seleccionar Ubicación' : 'Select Storage Location'}
+              title={preferences.language === 'es' ? 'Seleccionar Ubicación' : 'Select Storage Location'}
               selectedValue={location}
               onSelect={(val) => setLocation(val as StorageLocation)}
               options={[

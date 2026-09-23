@@ -44,10 +44,14 @@ public class MainActivity extends BridgeActivity {
                             Toast.makeText(MainActivity.this, "PDF guardado en Descargas: " + fileName, Toast.LENGTH_SHORT).show();
 
                             Uri fileUri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".fileprovider", file);
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(fileUri, "application/pdf");
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
+                            try {
+                                Intent intent = new Intent(Intent.ACTION_VIEW);
+                                intent.setDataAndType(fileUri, "application/pdf");
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(intent);
+                            } catch (android.content.ActivityNotFoundException e) {
+                                Toast.makeText(MainActivity.this, "PDF guardado. Instala un lector de PDF para abrirlo.", Toast.LENGTH_LONG).show();
+                            }
                         } else if (url != null) {
                             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
