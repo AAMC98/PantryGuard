@@ -10,6 +10,7 @@ interface ProfileViewProps {
   onLogout: () => void;
   onSyncData: () => Promise<void>;
   onShowToast: (message: string) => void;
+  onTestNotification?: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
@@ -20,6 +21,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   onLogout,
   onSyncData,
   onShowToast,
+  onTestNotification,
 }) => {
   const t = translations[preferences.language];
   const lang = preferences.language;
@@ -140,6 +142,42 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             chevron_right
           </span>
         </div>
+      </section>
+
+      {/* Information: Offline Local Storage & Cloud Sync Explanation */}
+      <section className="w-full bg-[#f8f9ff] dark:bg-[#14171a] rounded-[20px] p-4.5 border border-[#e1e2e8] dark:border-[#2e3135] flex flex-col gap-2.5">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-[#096430] dark:text-[#87d897] text-[20px]">
+            verified_user
+          </span>
+          <h4 className="text-xs sm:text-sm font-bold text-[#191c20] dark:text-white">
+            {lang === 'es' ? 'Almacenamiento Local & Respaldo en la Nube' : 'Local Storage & Cloud Backup'}
+          </h4>
+        </div>
+        <p className="text-xs text-[#505a50] dark:text-[#bfc9bd] leading-relaxed">
+          {lang === 'es'
+            ? 'Todos tus productos, listas de compras y recetas se guardan de forma instantánea y segura directamente en tu teléfono. El botón de sincronización confirma el respaldo para que tus datos nunca se pierdan.'
+            : 'All your items, shopping lists, and recipes are saved instantly and securely on your device. The sync button confirms cloud backup so you never lose your data.'}
+        </p>
+
+        {onTestNotification && (
+          <div className="pt-2 border-t border-[#e1e2e8] dark:border-[#282b30] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-xs font-semibold text-[#191c20] dark:text-white flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[18px] text-[#003d87] dark:text-[#a8c7fa]">
+                notifications_active
+              </span>
+              <span>{lang === 'es' ? '¿Cómo funcionan las notificaciones?' : 'How do notifications work?'}</span>
+            </span>
+            <button
+              type="button"
+              onClick={onTestNotification}
+              className="px-3 py-1.5 rounded-xl bg-[#004a21] hover:bg-[#096430] text-white text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[15px]">send</span>
+              <span>{lang === 'es' ? 'Probar Alerta en Vivo' : 'Test Live Alert'}</span>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Logout Action */}

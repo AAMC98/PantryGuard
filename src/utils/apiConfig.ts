@@ -55,16 +55,20 @@ export async function testBackendConnection(): Promise<{ ok: boolean; message: s
   const start = Date.now();
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
+    const timer = setTimeout(() => controller.abort(), 14000);
     const res = await fetch(apiUrl('/api/health'), { signal: controller.signal });
     clearTimeout(timer);
     const latencyMs = Date.now() - start;
     if (res.ok) {
-      return { ok: true, message: 'Conexión exitosa con el servidor de Pantry Guard', latencyMs };
+      return { ok: true, message: `Conexión exitosa con el servidor en la nube (${latencyMs}ms)`, latencyMs };
     }
     return { ok: false, message: `El servidor respondió con código ${res.status}`, latencyMs };
   } catch (err: any) {
     const latencyMs = Date.now() - start;
-    return { ok: false, message: 'No se pudo conectar al servidor remoto. Usando motor local de respaldo.', latencyMs };
+    return {
+      ok: false,
+      message: 'El servidor en Render puede estar suspendido por inactividad. El motor inteligente local está 100% activo en tu dispositivo.',
+      latencyMs,
+    };
   }
 }

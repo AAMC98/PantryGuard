@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ProductCategory, StorageLocation, UnitType, UserPreferences } from '../types';
 import { apiUrl } from '../utils/apiConfig';
+import { CustomPickerModal, PickerOption } from './CustomPickerModal';
 
 export interface ReceiptParsedItem {
   id: string;
@@ -57,6 +58,14 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
   const [storeName, setStoreName] = useState<string>('');
   const [parsedItems, setParsedItems] = useState<ReceiptParsedItem[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [pickerModal, setPickerModal] = useState<{
+    isOpen: boolean;
+    itemId: string;
+    field: 'unit' | 'location';
+    title: string;
+    selectedValue: string;
+    options: PickerOption[];
+  } | null>(null);
 
   if (!isOpen) return null;
 
@@ -387,21 +396,35 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
                             <label className="text-[10px] font-bold text-[#707a6f] dark:text-[#bfc9bd] block mb-0.5">
                               {isSpanish ? 'Unidad' : 'Unit'}
                             </label>
-                            <select
-                              value={item.unit}
-                              onChange={(e) =>
-                                handleUpdateItem(item.id, 'unit', e.target.value as UnitType)
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPickerModal({
+                                  isOpen: true,
+                                  itemId: item.id,
+                                  field: 'unit',
+                                  title: isSpanish ? 'Seleccionar Unidad' : 'Select Unit',
+                                  selectedValue: item.unit,
+                                  options: [
+                                    { value: 'unidades', label: 'Unidades', icon: 'category' },
+                                    { value: 'kg', label: 'kg', icon: 'scale' },
+                                    { value: 'g', label: 'g', icon: 'scale' },
+                                    { value: 'L', label: 'L', icon: 'water_drop' },
+                                    { value: 'ml', label: 'ml', icon: 'water_drop' },
+                                    { value: 'latas', label: 'Latas', icon: 'inventory_2' },
+                                    { value: 'paquetes', label: 'Paquetes', icon: 'inventory_2' },
+                                    { value: 'lb', label: 'lb', icon: 'scale' },
+                                    { value: 'oz', label: 'oz', icon: 'scale' },
+                                  ],
+                                })
                               }
-                              className="w-full text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#e1e2e8] dark:border-[#404940] bg-white dark:bg-[#2e3135] text-[#191c20] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#004a21]"
+                              className="w-full text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#e1e2e8] dark:border-[#404940] bg-white dark:bg-[#2e3135] text-[#191c20] dark:text-white flex items-center justify-between text-left"
                             >
-                              <option value="unidades">Unidades</option>
-                              <option value="kg">kg</option>
-                              <option value="g">g</option>
-                              <option value="L">L</option>
-                              <option value="ml">ml</option>
-                              <option value="lb">lb</option>
-                              <option value="oz">oz</option>
-                            </select>
+                              <span className="truncate">{item.unit}</span>
+                              <span className="material-symbols-outlined text-[14px] text-[#707a6f] dark:text-[#bfc9bd]">
+                                expand_more
+                              </span>
+                            </button>
                           </div>
                         </div>
 
@@ -411,19 +434,32 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
                             <label className="text-[10px] font-bold text-[#707a6f] dark:text-[#bfc9bd] block mb-0.5">
                               {isSpanish ? 'Ubicación' : 'Location'}
                             </label>
-                            <select
-                              value={item.location}
-                              onChange={(e) =>
-                                handleUpdateItem(item.id, 'location', e.target.value as StorageLocation)
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setPickerModal({
+                                  isOpen: true,
+                                  itemId: item.id,
+                                  field: 'location',
+                                  title: isSpanish ? 'Seleccionar Ubicación' : 'Select Location',
+                                  selectedValue: item.location,
+                                  options: [
+                                    { value: 'Refrigerador', label: 'Refrigerador', icon: 'kitchen' },
+                                    { value: 'Alacena', label: 'Alacena', icon: 'shelves' },
+                                    { value: 'Frutero', label: 'Frutero', icon: 'eco' },
+                                    { value: 'Congelador', label: 'Congelador', icon: 'ac_unit' },
+                                    { value: 'Despensa', label: 'Despensa', icon: 'inventory_2' },
+                                    { value: 'Otro', label: 'Otro', icon: 'door_sliding' },
+                                  ],
+                                })
                               }
-                              className="w-full text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#e1e2e8] dark:border-[#404940] bg-white dark:bg-[#2e3135] text-[#191c20] dark:text-white focus:outline-none focus:ring-1 focus:ring-[#004a21]"
+                              className="w-full text-xs font-semibold px-2 py-1.5 rounded-lg border border-[#e1e2e8] dark:border-[#404940] bg-white dark:bg-[#2e3135] text-[#191c20] dark:text-white flex items-center justify-between text-left"
                             >
-                              <option value="Refrigerador">Refrigerador</option>
-                              <option value="Alacena">Alacena</option>
-                              <option value="Frutero">Frutero</option>
-                              <option value="Congelador">Congelador</option>
-                              <option value="Despensa">Despensa</option>
-                            </select>
+                              <span className="truncate">{item.location}</span>
+                              <span className="material-symbols-outlined text-[14px] text-[#707a6f] dark:text-[#bfc9bd]">
+                                expand_more
+                              </span>
+                            </button>
                           </div>
                           <div className="w-1/2">
                             <label className="text-[10px] font-bold text-[#707a6f] dark:text-[#bfc9bd] block mb-0.5">
@@ -475,6 +511,21 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
           )}
         </div>
       </div>
+
+      {pickerModal && (
+        <CustomPickerModal
+          isOpen={pickerModal.isOpen}
+          onClose={() => setPickerModal(null)}
+          title={pickerModal.title}
+          selectedValue={pickerModal.selectedValue}
+          onSelect={(val) => {
+            if (pickerModal) {
+              handleUpdateItem(pickerModal.itemId, pickerModal.field, val);
+            }
+          }}
+          options={pickerModal.options}
+        />
+      )}
     </div>
   );
 };

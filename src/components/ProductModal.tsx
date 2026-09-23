@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Product, ProductCategory, StorageLocation, UnitType, UserPreferences } from '../types';
 import { translations } from '../utils/i18n';
 import { lookupBarcode } from '../utils/barcodeService';
+import { CustomPickerModal, PickerOption } from './CustomPickerModal';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -38,6 +39,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [isSearchingBarcode, setIsSearchingBarcode] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
+  const [isUnitPickerOpen, setIsUnitPickerOpen] = useState(false);
+  const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
 
   const handleLookupBarcodeManually = async () => {
     if (!barcode.trim()) return;
@@ -214,24 +218,33 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <label className="text-xs font-semibold text-[#404940] dark:text-[#bfc9bd]">
                 {t.productModal.categoryLabel}
               </label>
-              <div className="relative">
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                  className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-lg px-4 py-2.5 text-sm text-[#191c20] dark:text-white appearance-none focus:outline-none focus:border-[#003d87] focus:ring-1 focus:ring-[#003d87] transition-all pr-10"
-                >
-                  <option value="lacteos">{t.categories.lacteos}</option>
-                  <option value="frutas">{t.categories.frutas}</option>
-                  <option value="proteinas">{t.categories.proteinas}</option>
-                  <option value="granos">{t.categories.granos}</option>
-                  <option value="verduras">{t.categories.verduras}</option>
-                  <option value="bebidas">{t.categories.bebidas}</option>
-                  <option value="otros">{t.categories.otros}</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#707a6f] dark:text-[#bfc9bd]">
+              <button
+                type="button"
+                onClick={() => setIsCategoryPickerOpen(true)}
+                className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-xl px-4 py-2.5 text-sm text-[#191c20] dark:text-white flex items-center justify-between hover:border-[#096430] active:scale-[0.99] transition-all text-left shadow-xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-[20px] text-[#096430] dark:text-[#87d897]">
+                    {category === 'lacteos'
+                      ? 'egg'
+                      : category === 'frutas'
+                      ? 'nutrition'
+                      : category === 'proteinas'
+                      ? 'set_meal'
+                      : category === 'granos'
+                      ? 'grain'
+                      : category === 'verduras'
+                      ? 'eco'
+                      : category === 'bebidas'
+                      ? 'local_drink'
+                      : 'inventory_2'}
+                  </span>
+                  <span className="font-semibold">{t.categories[category] || category}</span>
+                </div>
+                <span className="material-symbols-outlined text-[#707a6f] dark:text-[#bfc9bd]">
                   expand_more
                 </span>
-              </div>
+              </button>
             </div>
 
             {/* Cantidad y Unidad Row */}
@@ -248,7 +261,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     value={quantity}
                     onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-lg px-4 py-2.5 text-sm text-[#191c20] dark:text-white focus:outline-none focus:border-[#003d87] focus:ring-1 focus:ring-[#003d87] transition-all"
+                    className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-xl px-4 py-2.5 text-sm text-[#191c20] dark:text-white focus:outline-none focus:border-[#003d87] focus:ring-1 focus:ring-[#003d87] transition-all"
                   />
                 </div>
 
@@ -256,45 +269,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   <label className="text-xs font-semibold text-[#404940] dark:text-[#bfc9bd]">
                     {t.productModal.unitLabel}
                   </label>
-                  <div className="relative">
-                    <select
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value as UnitType)}
-                      className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-lg px-4 py-2.5 text-sm text-[#191c20] dark:text-white appearance-none focus:outline-none focus:border-[#003d87] focus:ring-1 focus:ring-[#003d87] transition-all pr-10"
-                    >
-                      <option value="unidades">{t.units.unidades}</option>
-                      {preferences.unitSystem === 'imperial' ? (
-                        <>
-                          <optgroup label={preferences.language === 'es' ? 'Sistema Imperial' : 'Imperial System'}>
-                            <option value="lb">{t.units.lb}</option>
-                            <option value="oz">{t.units.oz}</option>
-                          </optgroup>
-                          <optgroup label={preferences.language === 'es' ? 'Sistema Métrico' : 'Metric System'}>
-                            <option value="kg">{t.units.kg}</option>
-                            <option value="g">{t.units.g}</option>
-                            <option value="L">{t.units.L}</option>
-                            <option value="ml">{t.units.ml}</option>
-                          </optgroup>
-                        </>
-                      ) : (
-                        <>
-                          <optgroup label={preferences.language === 'es' ? 'Sistema Métrico' : 'Metric System'}>
-                            <option value="kg">{t.units.kg}</option>
-                            <option value="g">{t.units.g}</option>
-                            <option value="L">{t.units.L}</option>
-                            <option value="ml">{t.units.ml}</option>
-                          </optgroup>
-                          <optgroup label={preferences.language === 'es' ? 'Sistema Imperial' : 'Imperial System'}>
-                            <option value="lb">{t.units.lb}</option>
-                            <option value="oz">{t.units.oz}</option>
-                          </optgroup>
-                        </>
-                      )}
-                    </select>
-                    <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#707a6f] dark:text-[#bfc9bd]">
+                  <button
+                    type="button"
+                    onClick={() => setIsUnitPickerOpen(true)}
+                    className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-xl px-4 py-2.5 text-sm text-[#191c20] dark:text-white flex items-center justify-between hover:border-[#096430] active:scale-[0.99] transition-all text-left shadow-xs truncate"
+                  >
+                    <span className="font-semibold truncate">{t.units[unit] || unit}</span>
+                    <span className="material-symbols-outlined text-[#707a6f] dark:text-[#bfc9bd] shrink-0 ml-1">
                       expand_more
                     </span>
-                  </div>
+                  </button>
                 </div>
               </div>
 
@@ -315,24 +299,85 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <label className="text-xs font-semibold text-[#404940] dark:text-[#bfc9bd]">
                 {t.productModal.locationLabel}
               </label>
-              <div className="relative">
-                <select
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value as StorageLocation)}
-                  className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-lg px-4 py-2.5 text-sm text-[#191c20] dark:text-white appearance-none focus:outline-none focus:border-[#003d87] focus:ring-1 focus:ring-[#003d87] transition-all pr-10"
-                >
-                  <option value="Refrigerador">{t.locations.Refrigerador}</option>
-                  <option value="Alacena">{t.locations.Alacena}</option>
-                  <option value="Frutero">{t.locations.Frutero}</option>
-                  <option value="Congelador">{t.locations.Congelador}</option>
-                  <option value="Despensa">{t.locations.Despensa}</option>
-                  <option value="Otro">{t.locations.Otro}</option>
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#707a6f] dark:text-[#bfc9bd]">
+              <button
+                type="button"
+                onClick={() => setIsLocationPickerOpen(true)}
+                className="w-full bg-white dark:bg-[#2e3135] border border-[#707a6f] dark:border-[#404940] rounded-xl px-4 py-2.5 text-sm text-[#191c20] dark:text-white flex items-center justify-between hover:border-[#096430] active:scale-[0.99] transition-all text-left shadow-xs"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="material-symbols-outlined text-[20px] text-[#003d87] dark:text-[#a8c7fa]">
+                    {location === 'Refrigerador'
+                      ? 'kitchen'
+                      : location === 'Alacena'
+                      ? 'shelves'
+                      : location === 'Frutero'
+                      ? 'eco'
+                      : location === 'Congelador'
+                      ? 'ac_unit'
+                      : location === 'Despensa'
+                      ? 'inventory_2'
+                      : 'door_sliding'}
+                  </span>
+                  <span className="font-semibold">{t.locations[location] || location}</span>
+                </div>
+                <span className="material-symbols-outlined text-[#707a6f] dark:text-[#bfc9bd]">
                   expand_more
                 </span>
-              </div>
+              </button>
             </div>
+
+            {/* Modals for Custom Pickers */}
+            <CustomPickerModal
+              isOpen={isCategoryPickerOpen}
+              onClose={() => setIsCategoryPickerOpen(false)}
+              title={isSpanish ? 'Seleccionar Categoría' : 'Select Category'}
+              selectedValue={category}
+              onSelect={(val) => setCategory(val as ProductCategory)}
+              options={[
+                { value: 'lacteos', label: t.categories.lacteos, icon: 'egg' },
+                { value: 'frutas', label: t.categories.frutas, icon: 'nutrition' },
+                { value: 'proteinas', label: t.categories.proteinas, icon: 'set_meal' },
+                { value: 'granos', label: t.categories.granos, icon: 'grain' },
+                { value: 'verduras', label: t.categories.verduras, icon: 'eco' },
+                { value: 'bebidas', label: t.categories.bebidas, icon: 'local_drink' },
+                { value: 'otros', label: t.categories.otros, icon: 'inventory_2' },
+              ]}
+            />
+
+            <CustomPickerModal
+              isOpen={isUnitPickerOpen}
+              onClose={() => setIsUnitPickerOpen(false)}
+              title={isSpanish ? 'Seleccionar Unidad' : 'Select Unit'}
+              selectedValue={unit}
+              onSelect={(val) => setUnit(val as UnitType)}
+              options={[
+                { value: 'unidades', label: t.units.unidades, icon: 'category' },
+                { value: 'kg', label: t.units.kg, icon: 'scale', badge: 'Métrico' },
+                { value: 'g', label: t.units.g, icon: 'scale', badge: 'Métrico' },
+                { value: 'L', label: t.units.L, icon: 'water_drop', badge: 'Métrico' },
+                { value: 'ml', label: t.units.ml, icon: 'water_drop', badge: 'Métrico' },
+                { value: 'latas', label: t.units.latas, icon: 'inventory_2' },
+                { value: 'paquetes', label: t.units.paquetes, icon: 'inventory_2' },
+                { value: 'lb', label: t.units.lb, icon: 'scale', badge: 'Imperial' },
+                { value: 'oz', label: t.units.oz, icon: 'scale', badge: 'Imperial' },
+              ]}
+            />
+
+            <CustomPickerModal
+              isOpen={isLocationPickerOpen}
+              onClose={() => setIsLocationPickerOpen(false)}
+              title={isSpanish ? 'Seleccionar Ubicación' : 'Select Storage Location'}
+              selectedValue={location}
+              onSelect={(val) => setLocation(val as StorageLocation)}
+              options={[
+                { value: 'Refrigerador', label: t.locations.Refrigerador, icon: 'kitchen', subtitle: 'Lácteos, carnes y perecederos' },
+                { value: 'Alacena', label: t.locations.Alacena, icon: 'shelves', subtitle: 'Enlatados, pastas y cereales' },
+                { value: 'Frutero', label: t.locations.Frutero, icon: 'eco', subtitle: 'Frutas a temperatura ambiente' },
+                { value: 'Congelador', label: t.locations.Congelador, icon: 'ac_unit', subtitle: 'Hielo y congelados' },
+                { value: 'Despensa', label: t.locations.Despensa, icon: 'inventory_2', subtitle: 'Almacén general' },
+                { value: 'Otro', label: t.locations.Otro, icon: 'door_sliding' },
+              ]}
+            />
 
             {/* Fecha de caducidad */}
             <div className="flex flex-col gap-1.5">

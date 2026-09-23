@@ -452,6 +452,47 @@ export default function App() {
     }));
   };
 
+  const handleTestNotification = async () => {
+    let perm = 'default';
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        perm = await Notification.requestPermission();
+      } catch {}
+    }
+
+    const testItem: PantryNotification = {
+      id: `notif-test-${Date.now()}`,
+      title: currentLang === 'es' ? '🔔 Alerta de Prueba: Leche Entera' : '🔔 Test Alert: Whole Milk',
+      message:
+        currentLang === 'es'
+          ? 'Este es un ejemplo real de cómo Pantry Guard te avisa cuando un alimento está próximo a vencer.'
+          : 'This is a live example of how Pantry Guard alerts you before food spoils.',
+      type: 'warning',
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+
+    setNotifications((prev) => [testItem, ...prev]);
+
+    if (perm === 'granted' && typeof window !== 'undefined' && 'Notification' in window) {
+      try {
+        new Notification(testItem.title, {
+          body: testItem.message,
+        });
+      } catch {}
+    }
+
+    try {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+    } catch {}
+
+    showToast(
+      currentLang === 'es'
+        ? '¡Notificación enviada! Revisa la campanita en la parte superior.'
+        : 'Notification sent! Check the bell icon at the top.'
+    );
+  };
+
   const handleShareApp = async () => {
     const shareTitle = 'Pantry Guard - Despensa Inteligente Cero Desperdicio';
     const shareText = currentLang === 'es'
@@ -593,6 +634,7 @@ export default function App() {
             }}
             onSyncData={handleSyncData}
             onShowToast={showToast}
+            onTestNotification={handleTestNotification}
           />
         )}
 

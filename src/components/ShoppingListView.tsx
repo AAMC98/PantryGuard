@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ProductCategory, ShoppingItem, UnitType, UserPreferences, UserProfile } from '../types';
 import { translations } from '../utils/i18n';
 import { exportShoppingListPDF } from '../utils/pdfExport';
+import { CustomPickerModal } from './CustomPickerModal';
 
 interface ShoppingListViewProps {
   items: ShoppingItem[];
@@ -34,6 +35,7 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const [newCustomItemName, setNewCustomItemName] = useState('');
   const [newCustomCategory, setNewCustomCategory] = useState<ProductCategory>('otros');
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
 
   const categories: (ProductCategory | 'all')[] = [
     'all',
@@ -302,19 +304,33 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             </div>
             
             <div className="flex items-center gap-2 shrink-0">
-              <select
-                value={newCustomCategory}
-                onChange={(e) => setNewCustomCategory(e.target.value as ProductCategory)}
-                className="text-xs bg-white dark:bg-[#2e3135] text-[#191c20] dark:text-white border border-[#bfc9bd]/80 dark:border-[#404940] rounded-lg px-2.5 py-2 focus:outline-none flex-1 sm:flex-none cursor-pointer"
+              <button
+                type="button"
+                onClick={() => setIsCategoryPickerOpen(true)}
+                className="text-xs bg-white dark:bg-[#2e3135] text-[#191c20] dark:text-white border border-[#bfc9bd]/80 dark:border-[#404940] rounded-lg px-2.5 py-2 focus:outline-none flex-1 sm:flex-none cursor-pointer flex items-center gap-1.5 hover:border-[#003d87] transition-colors"
               >
-                <option value="lacteos">{t.categories.lacteos}</option>
-                <option value="frutas">{t.categories.frutas}</option>
-                <option value="proteinas">{t.categories.proteinas}</option>
-                <option value="granos">{t.categories.granos}</option>
-                <option value="verduras">{t.categories.verduras}</option>
-                <option value="bebidas">{t.categories.bebidas}</option>
-                <option value="otros">{t.categories.otros}</option>
-              </select>
+                <span>{t.categories[newCustomCategory] || newCustomCategory}</span>
+                <span className="material-symbols-outlined text-[16px] text-[#707a6f] dark:text-[#bfc9bd]">
+                  expand_more
+                </span>
+              </button>
+
+              <CustomPickerModal
+                isOpen={isCategoryPickerOpen}
+                onClose={() => setIsCategoryPickerOpen(false)}
+                title={lang === 'es' ? 'Categoría para Compras' : 'Shopping Category'}
+                selectedValue={newCustomCategory}
+                onSelect={(val) => setNewCustomCategory(val as ProductCategory)}
+                options={[
+                  { value: 'lacteos', label: t.categories.lacteos, icon: 'egg' },
+                  { value: 'frutas', label: t.categories.frutas, icon: 'nutrition' },
+                  { value: 'proteinas', label: t.categories.proteinas, icon: 'set_meal' },
+                  { value: 'granos', label: t.categories.granos, icon: 'grain' },
+                  { value: 'verduras', label: t.categories.verduras, icon: 'eco' },
+                  { value: 'bebidas', label: t.categories.bebidas, icon: 'local_drink' },
+                  { value: 'otros', label: t.categories.otros, icon: 'inventory_2' },
+                ]}
+              />
               
               <button
                 type="submit"

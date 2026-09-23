@@ -448,7 +448,7 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {recipesToShow.map((recipe) => {
             const isSaved = savedRecipes.some((r) => r.id === recipe.id || r.title === recipe.title);
-            const expiringIngredients = recipe.rescuedPantryIngredients.filter((i) => i.isExpiringSoon);
+            const expiringIngredients = (recipe.rescuedPantryIngredients || []).filter((i) => i.isExpiringSoon);
 
             return (
               <div
@@ -532,7 +532,7 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
                     </div>
 
                     <div className="flex flex-wrap gap-1.5">
-                      {recipe.rescuedPantryIngredients.map((item, idx) => (
+                      {(recipe.rescuedPantryIngredients || []).map((item, idx) => (
                         <span
                           key={idx}
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium ${
@@ -642,7 +642,7 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
                   {t.aiInsights.pantryIngredientsTitle}
                 </h4>
                 <div className="space-y-1.5">
-                  {activeRecipeDetails.rescuedPantryIngredients.map((ing, i) => (
+                  {(activeRecipeDetails.rescuedPantryIngredients || []).map((ing, i) => (
                     <div
                       key={i}
                       className="flex items-center justify-between p-2.5 rounded-xl bg-[#f8f9ff] dark:bg-[#14171a] border border-[#e1e2e8] dark:border-[#282b30]"
@@ -679,7 +679,7 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
                     {t.aiInsights.extraIngredientsTitle}
                   </h4>
                   <div className="space-y-1.5">
-                    {activeRecipeDetails.extraIngredients.map((ext, i) => {
+                    {(activeRecipeDetails.extraIngredients || []).map((ext, i) => {
                       const isAdded = addedExtraItems[ext.name];
                       return (
                         <div
@@ -724,7 +724,7 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
                   {t.aiInsights.stepsTitle}
                 </h4>
                 <div className="space-y-2.5">
-                  {activeRecipeDetails.steps.map((step, idx) => {
+                  {(activeRecipeDetails.steps || []).map((step, idx) => {
                     const stepKey = `${activeRecipeDetails.id}-step-${idx}`;
                     const isDone = completedSteps[stepKey];
                     return (
