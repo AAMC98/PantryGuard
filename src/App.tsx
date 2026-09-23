@@ -12,6 +12,7 @@ import { ProfileView } from './components/ProfileView';
 import { ShoppingListView } from './components/ShoppingListView';
 import { TopAppBar } from './components/TopAppBar';
 import { ReceiptScanModal } from './components/ReceiptScanModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import {
   initialNotifications,
   initialPreferences,
@@ -612,15 +613,20 @@ export default function App() {
         )}
 
         {activeTab === 'ai-insights' && (
-          <AIInsightsView
-            products={products}
-            shoppingItems={shoppingItems}
-            preferences={preferences}
-            user={user}
-            onAddShoppingItem={handleAddShoppingItem}
-            onShowToast={showToast}
-            onNavigateTab={(tab) => setActiveTab(tab)}
-          />
+          <ErrorBoundary
+            fallbackTitle="Asistente Chef IA listo para recargar"
+            fallbackMessage="Tus alimentos están protegidos en tu despensa. Pulsa el botón para recargar las sugerencias culinarias."
+          >
+            <AIInsightsView
+              products={products}
+              shoppingItems={shoppingItems}
+              preferences={preferences}
+              user={user}
+              onAddShoppingItem={handleAddShoppingItem}
+              onShowToast={showToast}
+              onNavigateTab={(tab) => setActiveTab(tab)}
+            />
+          </ErrorBoundary>
         )}
 
         {activeTab === 'profile' && (

@@ -185,23 +185,47 @@ export function exportInventoryPDF(
   }
 
   const filename = `Pantry_Guard_Inventario_${new Date().toISOString().split('T')[0]}.pdf`;
+  deliverPdf(doc, filename);
+}
+
+async function deliverPdf(doc: jsPDF, filename: string) {
+  const isMobile =
+    typeof window !== 'undefined' &&
+    (/android|iphone|ipad/i.test(navigator.userAgent) || (window as any).Capacitor !== undefined);
+
+  // 1. Mobile file share sheet if supported
+  if (isMobile && typeof navigator !== 'undefined' && (navigator as any).canShare) {
+    try {
+      const blob = doc.output('blob');
+      const file = new File([blob], filename, { type: 'application/pdf' });
+      if ((navigator as any).canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: filename,
+        });
+        return;
+      }
+    } catch (e: any) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+
+  // 2. Standard doc.save (triggers download on desktop & web browsers)
   try {
     doc.save(filename);
-    
-    // In Android / mobile WebView fallback
-    const isMobile = typeof window !== 'undefined' && (/android|iphone|ipad/i.test(navigator.userAgent) || (window as any).Capacitor);
-    if (isMobile) {
+  } catch {}
+
+  // 3. Android WebView / Capacitor dataUri trigger (intercepted by MainActivity DownloadListener)
+  if (isMobile) {
+    try {
       const dataUri = doc.output('datauristring');
       const a = document.createElement('a');
       a.href = dataUri;
       a.download = filename;
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
-      setTimeout(() => document.body.removeChild(a), 500);
-    }
-  } catch {
-    doc.save(filename);
+      setTimeout(() => document.body.removeChild(a), 400);
+    } catch {}
   }
 }
 
@@ -298,20 +322,5 @@ export function exportShoppingListPDF(
   });
 
   const filename = `Pantry_Guard_Compras_${new Date().toISOString().split('T')[0]}.pdf`;
-  try {
-    doc.save(filename);
-    const isMobile = typeof window !== 'undefined' && (/android|iphone|ipad/i.test(navigator.userAgent) || (window as any).Capacitor);
-    if (isMobile) {
-      const dataUri = doc.output('datauristring');
-      const a = document.createElement('a');
-      a.href = dataUri;
-      a.download = filename;
-      a.target = '_blank';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => document.body.removeChild(a), 500);
-    }
-  } catch {
-    doc.save(filename);
-  }
+  deliverPdf(doc, filename);
 }

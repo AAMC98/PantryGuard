@@ -79,21 +79,32 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     onShowToast(lang === 'es' ? 'Descargando lista de compras en PDF...' : 'Downloading shopping list PDF...');
   };
 
-  const handleShareList = () => {
+  const handleShareList = async () => {
+    if (items.length === 0) {
+      onShowToast(lang === 'es' ? 'La lista de compras está vacía' : 'Shopping list is empty');
+      return;
+    }
+
     const textList = items
       .map((it) => `${it.checked ? '✅' : '⬜'} ${it.name} - ${it.quantity} ${t.units[it.unit] || it.unit}`)
       .join('\n');
+    const title = 'Pantry Guard - Lista de Compras';
+    const text = `Lista de Compras de ${user.householdName || 'Pantry Guard'}:\n\n${textList}`;
 
     if (navigator.share) {
-      navigator
-        .share({
-          title: 'Pantry Guard - Lista de Compras',
-          text: `Lista de Compras de ${user.householdName}:\n\n${textList}`,
-        })
-        .catch(() => {});
-    } else {
-      navigator.clipboard.writeText(textList);
-      onShowToast(lang === 'es' ? 'Lista copiada al portapapeles' : 'List copied to clipboard');
+      try {
+        await navigator.share({ title, text });
+        return;
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${title}\n\n${text}`);
+      onShowToast(lang === 'es' ? '¡Lista copiada al portapapeles!' : 'List copied to clipboard!');
+    } catch {
+      onShowToast(lang === 'es' ? 'Lista lista para compartir' : 'List ready to share');
     }
   };
 
