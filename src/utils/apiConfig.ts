@@ -3,7 +3,7 @@
  * Automatically handles routing between Web (relative path) and Capacitor/APK (live cloud backend)
  */
 
-export const DEFAULT_BACKEND_URL = 'https://pantryguard.onrender.com';
+export const DEFAULT_BACKEND_URL = 'https://pantryguard-0xux.onrender.com';
 
 export function getCustomBackendUrl(): string | null {
   try {
