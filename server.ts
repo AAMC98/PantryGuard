@@ -1,4 +1,4 @@
-﻿import express from 'express';
+import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
@@ -468,6 +468,9 @@ async function startServer() {
     }
     next();
   });
+
+  // Trust Render's reverse proxy to get the real client IP for rate limiting
+  app.set('trust proxy', 1);
 
   app.use(express.json({ limit: '10mb' }));
 
