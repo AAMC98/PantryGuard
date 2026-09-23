@@ -79,7 +79,7 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6500); // 6.5s timeout for mobile
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout to allow Render free tier to wake up
 
       const response = await fetch(apiUrl('/api/ai/recipes'), {
         method: 'POST',

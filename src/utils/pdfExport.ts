@@ -189,11 +189,25 @@ export function exportInventoryPDF(
 }
 
 async function deliverPdf(doc: jsPDF, filename: string) {
-  const isMobile =
-    typeof window !== 'undefined' &&
-    (/android|iphone|ipad/i.test(navigator.userAgent) || (window as any).Capacitor !== undefined);
+  const isCapacitor = typeof window !== 'undefined' && (window as any).Capacitor !== undefined;
+  const isMobile = typeof window !== 'undefined' && /android|iphone|ipad/i.test(navigator.userAgent);
 
-  // 1. Mobile file share sheet if supported
+  // 1. Android WebView / Capacitor dataUri trigger (intercepted by MainActivity DownloadListener)
+  // We prioritize this for Capacitor so the file saves directly to the Downloads folder
+  if (isCapacitor) {
+    try {
+      const dataUri = doc.output('datauristring');
+      const a = document.createElement('a');
+      a.href = dataUri;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 400);
+      return; // Exit here, let the Java DownloadListener handle it
+    } catch {}
+  }
+
+  // 2. Mobile web browser share sheet if supported
   if (isMobile && typeof navigator !== 'undefined' && (navigator as any).canShare) {
     try {
       const blob = doc.output('blob');
@@ -210,23 +224,10 @@ async function deliverPdf(doc: jsPDF, filename: string) {
     }
   }
 
-  // 2. Standard doc.save (triggers download on desktop & web browsers)
+  // 3. Standard doc.save (triggers download on desktop web browsers)
   try {
     doc.save(filename);
   } catch {}
-
-  // 3. Android WebView / Capacitor dataUri trigger (intercepted by MainActivity DownloadListener)
-  if (isMobile) {
-    try {
-      const dataUri = doc.output('datauristring');
-      const a = document.createElement('a');
-      a.href = dataUri;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => document.body.removeChild(a), 400);
-    } catch {}
-  }
 }
 
 export function exportShoppingListPDF(
