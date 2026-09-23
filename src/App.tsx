@@ -413,6 +413,36 @@ export default function App() {
     );
   };
 
+  const handleMoveCheckedToPantry = () => {
+    const checkedItems = shoppingItems.filter((it) => it.checked);
+    if (checkedItems.length === 0) return;
+
+    const now = new Date().toISOString();
+    const newProds: Product[] = checkedItems.map((it) => {
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      return {
+        id: `prod-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        name: it.name,
+        category: it.category,
+        quantity: it.quantity || 1,
+        unit: it.unit || 'unidades',
+        location: it.category === 'lacteos' || it.category === 'proteinas' ? 'Refrigerador' : 'Alacena',
+        expiryDate: d.toISOString().split('T')[0],
+        createdAt: now,
+        updatedAt: now,
+      };
+    });
+
+    setProducts((prev) => [...newProds, ...prev]);
+    setShoppingItems((prev) => prev.filter((it) => !it.checked));
+    showToast(
+      preferences.language === 'es'
+        ? `¡${checkedItems.length} producto(s) guardados en tu despensa!`
+        : `Moved ${checkedItems.length} item(s) to your pantry!`
+    );
+  };
+
   // Cloud Sync Simulation
   const handleSyncData = async () => {
     await new Promise((resolve) => setTimeout(resolve, 900));
@@ -420,6 +450,45 @@ export default function App() {
       ...prev,
       lastSyncedAt: new Date().toISOString(),
     }));
+  };
+
+  const handleShareApp = async () => {
+    const shareTitle = 'Pantry Guard - Despensa Inteligente Cero Desperdicio';
+    const shareText = currentLang === 'es'
+      ? '¡Hola! Estoy usando Pantry Guard para gestionar mi despensa, evitar el desperdicio y cocinar con IA. Pruébala aquí:'
+      : 'Hello! I am using Pantry Guard to manage my pantry, stop food waste and cook with AI. Check it out here:';
+    const shareUrl = window.location.href.includes('localhost')
+      ? 'https://pantryguard.onrender.com'
+      : window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: `${shareText} ${shareUrl}`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(`${shareTitle}\n${shareText}\n${shareUrl}`);
+      showToast(
+        currentLang === 'es'
+          ? '¡Enlace de Pantry Guard copiado al portapapeles!'
+          : 'Pantry Guard link copied to clipboard!'
+      );
+    } catch {
+      showToast(
+        currentLang === 'es'
+          ? 'Enlace: https://pantryguard.onrender.com'
+          : 'Link: https://pantryguard.onrender.com'
+      );
+    }
   };
 
   const unreadNotificationsCount = (notifications || []).filter((n) => !n.read).length;
@@ -456,6 +525,7 @@ export default function App() {
         unreadCount={unreadNotificationsCount}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenScanner={() => setIsScannerOpen(true)}
+        onShare={handleShareApp}
         user={user}
         preferences={preferences}
         title={getTopBarTitle()}
@@ -463,8 +533,8 @@ export default function App() {
         onBack={() => setActiveTab('profile')}
       />
 
-      {/* Main View Area with proper top offset for the fixed header */}
-      <main className="flex-1 flex flex-col pt-16 pb-28 md:pb-24 w-full">
+      {/* Main View Area with dynamic safe area offset so top elements never get cut off */}
+      <main className="flex-1 flex flex-col pt-[calc(4rem+env(safe-area-inset-top,0px)+12px)] pb-[calc(5rem+env(safe-area-inset-bottom,0px)+16px)] w-full">
         {activeTab === 'dashboard' && (
           <DashboardView
             products={products}
@@ -493,6 +563,7 @@ export default function App() {
             onAddItem={handleAddShoppingItem}
             onRemoveItem={handleRemoveShoppingItem}
             onClearCompleted={handleClearCompletedShopping}
+            onMoveCheckedToPantry={handleMoveCheckedToPantry}
             user={user}
             preferences={preferences}
             onShowToast={showToast}

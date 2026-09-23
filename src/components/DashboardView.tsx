@@ -46,12 +46,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Helper to pick standard icon for product
   const getProductIcon = (p: Product) => {
-    const { status } = calculateProductStatus(p.expiryDate, preferences.expiryAlertDays);
-    if (status === 'expired') return 'warning';
-
     const nameLower = p.name.toLowerCase();
-    if (nameLower.includes('leche') || nameLower.includes('agua') || nameLower.includes('jugo') || p.category === 'bebidas') {
-      return 'water_drop';
+
+    if (nameLower.includes('leche') || nameLower.includes('milk') || p.category === 'bebidas') {
+      return 'local_drink';
+    }
+    if (nameLower.includes('yogurt') || nameLower.includes('yogur')) {
+      return 'icecream';
+    }
+    if (nameLower.includes('queso') || nameLower.includes('cheese') || p.category === 'lacteos') {
+      return 'egg';
     }
     if (nameLower.includes('huevo') || nameLower.includes('egg')) {
       return 'egg';
@@ -65,16 +69,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (nameLower.includes('manzana') || nameLower.includes('fruta') || p.category === 'frutas') {
       return 'nutrition';
     }
-    if (nameLower.includes('yogurt') || nameLower.includes('queso') || p.category === 'lacteos') {
-      return 'lunch_dining';
-    }
     if (p.category === 'verduras') {
       return 'eco';
     }
     if (p.category === 'proteinas') {
       return 'restaurant';
     }
-    return status === 'expiring' ? 'schedule' : 'kitchen';
+    return 'kitchen';
   };
 
   // Filter products
@@ -136,6 +137,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return `${t.dashboard.tabs.expired} ${t.dashboard.productCount(sortedProducts.length)}`;
     }
     return `${t.dashboard.tabs.all} ${t.dashboard.productCount(sortedProducts.length)}`;
+  };
+
+  const formatExpiryDate = (dateStr: string) => {
+    try {
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+        return d.toLocaleDateString(lang === 'es' ? 'es-MX' : 'en-US', {
+          day: 'numeric',
+          month: 'short',
+        });
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
   };
 
   return (
@@ -387,19 +404,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                 {/* Content Area */}
                 <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <h3 className="font-semibold text-base text-[#191c20] dark:text-[#f8f9ff] truncate group-hover:text-[#004a21] dark:group-hover:text-[#87d897] transition-colors">
-                    {p.name}
-                  </h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-bold text-sm sm:text-base text-[#191c20] dark:text-[#f8f9ff] truncate group-hover:text-[#004a21] dark:group-hover:text-[#87d897] transition-colors">
+                      {p.name}
+                    </h3>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#004a21]/10 text-[#004a21] dark:bg-[#87d897]/15 dark:text-[#87d897] shrink-0">
+                      {t.categories[p.category] || p.category}
+                    </span>
+                  </div>
+
                   <p className="text-xs text-[#404940] dark:text-[#bfc9bd] truncate mt-0.5">
-                    {p.quantity} {t.units[p.unit] || p.unit} •{' '}
-                    {t.locations[p.location] || p.location}
+                    {p.quantity} {t.units[p.unit] || p.unit} • {t.locations[p.location] || p.location}
                   </p>
 
-                  {/* Status indicator row */}
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0 animate-pulse`}></span>
-                    <span className={`text-[11px] font-medium ${badgeText} truncate`}>
-                      {displayText[lang]}
+                  {/* Status & Expiry Date row */}
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0 animate-pulse`}></span>
+                      <span className={`text-[11px] font-bold ${badgeText}`}>
+                        {displayText[lang]}
+                      </span>
+                    </div>
+
+                    <span className="text-[10.5px] text-[#707a6f] dark:text-[#bfc9bd] flex items-center gap-1 font-medium bg-[#f2f3f9] dark:bg-[#2e3135] px-2 py-0.5 rounded-md">
+                      <span className="material-symbols-outlined text-[13px]">calendar_today</span>
+                      <span>{formatExpiryDate(p.expiryDate)}</span>
                     </span>
                   </div>
                 </div>

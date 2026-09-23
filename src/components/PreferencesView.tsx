@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Language, UserPreferences } from '../types';
 import { translations } from '../utils/i18n';
+import { getCustomBackendUrl, setCustomBackendUrl, testBackendConnection, DEFAULT_BACKEND_URL } from '../utils/apiConfig';
 
 interface PreferencesViewProps {
   preferences: UserPreferences;
@@ -15,49 +16,65 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
   onBack,
   onShowToast,
 }) => {
-  const t = translations[preferences.language];
+  const t = translations[preferences?.language || 'es'];
+  const isSpanish = preferences?.language !== 'en';
 
-  const [lang, setLang] = useState<Language>(preferences.language);
-  const [dark, setDark] = useState<boolean>(preferences.darkMode);
+  const [lang, setLang] = useState<Language>(preferences?.language || 'es');
+  const [dark, setDark] = useState<boolean>(preferences?.darkMode ?? false);
+  const [alertDays, setAlertDays] = useState<number>(preferences?.expiryAlertDays || 3);
+  const [backendUrl, setBackendUrl] = useState<string>(getCustomBackendUrl() || DEFAULT_BACKEND_URL);
+  
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingServer, setIsTestingServer] = useState(false);
+  const [serverStatus, setServerStatus] = useState<{ ok: boolean; message: string; latencyMs?: number } | null>(null);
 
   useEffect(() => {
-    setLang(preferences.language);
-    setDark(preferences.darkMode);
+    setLang(preferences?.language || 'es');
+    setDark(preferences?.darkMode ?? false);
+    setAlertDays(preferences?.expiryAlertDays || 3);
   }, [preferences]);
 
-  const handleLanguageChange = (newLang: Language) => {
-    setLang(newLang);
-    onUpdatePreferences({ language: newLang });
-    onShowToast(
-      newLang === 'es' ? 'Idioma cambiado a Español' : 'Language changed to English'
-    );
-  };
-
-  const handleThemeToggle = (targetDark?: boolean) => {
-    const nextDark = typeof targetDark === 'boolean' ? targetDark : !dark;
-    setDark(nextDark);
-    onUpdatePreferences({ darkMode: nextDark });
-    if (nextDark) {
-      document.documentElement.classList.add('dark');
-      onShowToast(preferences.language === 'es' ? 'Modo Oscuro activado' : 'Dark mode enabled');
-    } else {
-      document.documentElement.classList.remove('dark');
-      onShowToast(preferences.language === 'es' ? 'Modo Claro activado' : 'Light mode enabled');
+  const handleTestConnection = async () => {
+    setIsTestingServer(true);
+    setServerStatus(null);
+    try {
+      // Temporarily set custom url to test
+      setCustomBackendUrl(backendUrl);
+      const res = await testBackendConnection();
+      setServerStatus(res);
+      onShowToast(res.message);
+    } catch {
+      setServerStatus({ ok: false, message: isSpanish ? 'Error al contactar el servidor' : 'Failed to contact server' });
+    } finally {
+      setIsTestingServer(false);
     }
   };
 
   const handleSave = () => {
     setIsSaving(true);
+
+    // Save custom backend url
+    setCustomBackendUrl(backendUrl === DEFAULT_BACKEND_URL ? null : backendUrl);
+
+    // Update parent preferences
+    onUpdatePreferences({
+      language: lang,
+      darkMode: dark,
+      expiryAlertDays: alertDays,
+    });
+
+    // Apply dark mode class immediately to <html>
+    if (dark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
     setTimeout(() => {
-      onUpdatePreferences({
-        language: lang,
-        darkMode: dark,
-      });
       setIsSaving(false);
-      onShowToast(t.preferences.savedToast);
+      onShowToast(isSpanish ? '¡Preferencias guardadas con éxito!' : 'Preferences saved successfully!');
       setTimeout(onBack, 300);
-    }, 400);
+    }, 350);
   };
 
   return (
@@ -65,25 +82,31 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
       {/* Title */}
       <div className="flex items-center gap-3">
         <button
+          type="button"
           onClick={onBack}
           aria-label="Volver"
           className="w-10 h-10 rounded-full flex items-center justify-center text-[#404940] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#2e3135] transition-colors"
         >
           <span className="material-symbols-outlined text-[24px]">arrow_back</span>
         </button>
-        <h2 className="text-2xl font-bold text-[#191c20] dark:text-[#f8f9ff]">
-          {t.preferences.title}
-        </h2>
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#191c20] dark:text-[#f8f9ff]">
+            {t.preferences.title}
+          </h2>
+          <p className="text-xs text-[#707a6f] dark:text-[#bfc9bd]">
+            {isSpanish ? 'Personaliza tu experiencia, alertas y conexión' : 'Customize app experience, alerts & connection'}
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Language Settings Card */}
         <section className="bg-white dark:bg-[#1e2124] rounded-2xl p-5 shadow-sm border border-[#bfc9bd]/60 dark:border-[#404940] flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[26px]">
+            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[24px]">
               language
             </span>
-            <h3 className="font-semibold text-base text-[#191c20] dark:text-[#f8f9ff]">
+            <h3 className="font-semibold text-sm sm:text-base text-[#191c20] dark:text-[#f8f9ff]">
               {t.preferences.languageTitle}
             </h3>
           </div>
@@ -91,11 +114,11 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
             {t.preferences.languageDesc}
           </p>
 
-          <div className="mt-2 flex flex-col gap-2">
+          <div className="mt-1 flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => handleLanguageChange('es')}
-              className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border text-left ${
+              onClick={() => setLang('es')}
+              className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border text-left ${
                 lang === 'es'
                   ? 'bg-[#096430]/10 dark:bg-[#87d897]/15 border-[#004a21] dark:border-[#87d897] font-semibold'
                   : 'bg-[#f8f9ff] dark:bg-[#2e3135] border-transparent hover:bg-[#e1e2e8] dark:hover:bg-[#383c41]'
@@ -103,8 +126,8 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-base">🇲🇽</span>
-                <span className="text-sm text-[#191c20] dark:text-[#f8f9ff]">
-                  {t.preferences.spanish}
+                <span className="text-xs sm:text-sm text-[#191c20] dark:text-[#f8f9ff]">
+                  Español (México / Latam)
                 </span>
               </div>
               <span className={`material-symbols-outlined text-[20px] ${lang === 'es' ? 'text-[#004a21] dark:text-[#87d897]' : 'text-transparent'}`}>
@@ -114,8 +137,8 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
 
             <button
               type="button"
-              onClick={() => handleLanguageChange('en')}
-              className={`flex items-center justify-between p-3.5 rounded-xl cursor-pointer transition-all border text-left ${
+              onClick={() => setLang('en')}
+              className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all border text-left ${
                 lang === 'en'
                   ? 'bg-[#096430]/10 dark:bg-[#87d897]/15 border-[#004a21] dark:border-[#87d897] font-semibold'
                   : 'bg-[#f8f9ff] dark:bg-[#2e3135] border-transparent hover:bg-[#e1e2e8] dark:hover:bg-[#383c41]'
@@ -123,8 +146,8 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-base">🇺🇸</span>
-                <span className="text-sm text-[#191c20] dark:text-[#f8f9ff]">
-                  {t.preferences.english}
+                <span className="text-xs sm:text-sm text-[#191c20] dark:text-[#f8f9ff]">
+                  English (United States)
                 </span>
               </div>
               <span className={`material-symbols-outlined text-[20px] ${lang === 'en' ? 'text-[#004a21] dark:text-[#87d897]' : 'text-transparent'}`}>
@@ -137,10 +160,10 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
         {/* Theme Settings Card (Light / Dark Mode Selector) */}
         <section className="bg-white dark:bg-[#1e2124] rounded-2xl p-5 shadow-sm border border-[#bfc9bd]/60 dark:border-[#404940] flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[26px]">
+            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[24px]">
               {dark ? 'dark_mode' : 'light_mode'}
             </span>
-            <h3 className="font-semibold text-base text-[#191c20] dark:text-[#f8f9ff]">
+            <h3 className="font-semibold text-sm sm:text-base text-[#191c20] dark:text-[#f8f9ff]">
               {t.preferences.appearanceTitle}
             </h3>
           </div>
@@ -148,110 +171,145 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
             {t.preferences.appearanceDesc}
           </p>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {/* Light Mode Option */}
+          <div className="mt-1 grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => handleThemeToggle(false)}
-              className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+              onClick={() => setDark(false)}
+              className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${
                 !dark
                   ? 'bg-[#f8f9ff] border-[#004a21] text-[#004a21] shadow-sm font-semibold ring-2 ring-[#004a21]/20'
-                  : 'bg-[#f8f9ff] dark:bg-[#2e3135] border-transparent text-[#707a6f] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#383c41]'
+                  : 'bg-[#f8f9ff] dark:bg-[#2e3135] border-transparent text-[#707a6f] dark:text-[#bfc9bd] hover:bg-[#e1e2e8]'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
-                <span className="material-symbols-outlined text-[22px]">wb_sunny</span>
-              </div>
-              <span className="text-xs sm:text-sm">
-                {preferences.language === 'es' ? 'Modo Claro' : 'Light Mode'}
-              </span>
-              {!dark && (
-                <span className="text-[10px] bg-[#004a21] text-white px-2 py-0.5 rounded-full font-medium">
-                  {preferences.language === 'es' ? 'Activo' : 'Active'}
-                </span>
-              )}
+              <span className="material-symbols-outlined text-[24px] text-amber-500">wb_sunny</span>
+              <span className="text-xs font-bold">{isSpanish ? 'Modo Claro' : 'Light Mode'}</span>
             </button>
 
-            {/* Dark Mode Option */}
             <button
               type="button"
-              onClick={() => handleThemeToggle(true)}
-              className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+              onClick={() => setDark(true)}
+              className={`p-3 rounded-xl border flex flex-col items-center gap-1.5 transition-all ${
                 dark
                   ? 'bg-[#111318] border-[#87d897] text-[#87d897] shadow-sm font-semibold ring-2 ring-[#87d897]/30'
-                  : 'bg-[#f8f9ff] dark:bg-[#2e3135] border-transparent text-[#707a6f] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#383c41]'
+                  : 'bg-[#f8f9ff] dark:bg-[#2e3135] border-transparent text-[#707a6f] dark:text-[#bfc9bd] hover:bg-[#e1e2e8]'
               }`}
             >
-              <div className="w-10 h-10 rounded-full bg-indigo-950 flex items-center justify-center text-indigo-300">
-                <span className="material-symbols-outlined text-[22px]">nightlight</span>
-              </div>
-              <span className="text-xs sm:text-sm">
-                {preferences.language === 'es' ? 'Modo Oscuro' : 'Dark Mode'}
-              </span>
-              {dark && (
-                <span className="text-[10px] bg-[#87d897] text-[#00210b] px-2 py-0.5 rounded-full font-bold">
-                  {preferences.language === 'es' ? 'Activo' : 'Active'}
-                </span>
-              )}
+              <span className="material-symbols-outlined text-[24px] text-indigo-400">nightlight</span>
+              <span className="text-xs font-bold">{isSpanish ? 'Modo Oscuro' : 'Dark Mode'}</span>
             </button>
           </div>
         </section>
-        {/* Mobile & PWA Installation Guide for iOS & Android */}
-        <section className="bg-white dark:bg-[#191c20] p-5 rounded-2xl border border-[#e1e2e8] dark:border-[#2e3135] shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897]">
-              smartphone
+
+        {/* Expiry Alert Days Setting */}
+        <section className="bg-white dark:bg-[#1e2124] rounded-2xl p-5 shadow-sm border border-[#bfc9bd]/60 dark:border-[#404940] flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[24px]">
+              notifications_active
             </span>
-            <h3 className="text-sm sm:text-base font-bold text-[#191c20] dark:text-white">
-              {preferences.language === 'es' ? 'Instalar en tu Celular (iOS y Android)' : 'Install on Phone (iOS & Android)'}
+            <h3 className="font-semibold text-sm sm:text-base text-[#191c20] dark:text-[#f8f9ff]">
+              {isSpanish ? 'Días de Alerta de Caducidad' : 'Expiry Alert Threshold'}
             </h3>
           </div>
-          <p className="text-xs text-[#707a6f] dark:text-[#bfc9bd] mb-3 leading-relaxed">
-            {preferences.language === 'es'
-              ? 'Puedes usar Pantry Guard a pantalla completa como una aplicación nativa instalándola en tu pantalla de inicio:'
-              : 'You can use Pantry Guard in full screen as a native application by adding it to your home screen:'}
+          <p className="text-xs text-[#404940] dark:text-[#bfc9bd]">
+            {isSpanish
+              ? '¿Con cuántos días de anticipación marcar un producto en color naranja?'
+              : 'How many days before expiration to alert products in orange?'}
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-            {/* iOS Instructions */}
-            <div className="p-3.5 rounded-xl bg-[#f8f9ff] dark:bg-[#2e3135] border border-[#e1e2e8] dark:border-[#404940] flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5 font-bold text-[#191c20] dark:text-white">
-                <span className="material-symbols-outlined text-[#003d87] dark:text-[#87d897] text-[18px]">
-                  phone_iphone
+          <div className="flex items-center gap-2 mt-2">
+            {[2, 3, 5, 7].map((days) => (
+              <button
+                key={days}
+                type="button"
+                onClick={() => setAlertDays(days)}
+                className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                  alertDays === days
+                    ? 'bg-[#004a21] text-white border-[#004a21] shadow-sm'
+                    : 'bg-[#f8f9ff] dark:bg-[#2e3135] text-[#404940] dark:text-[#bfc9bd] border-transparent hover:bg-[#e1e2e8]'
+                }`}
+              >
+                {days} {isSpanish ? 'días' : 'days'}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Backend Cloud Server Connection (Crucial for APK & Web) */}
+        <section className="bg-white dark:bg-[#1e2124] rounded-2xl p-5 shadow-sm border border-[#bfc9bd]/60 dark:border-[#404940] flex flex-col gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[24px]">
+              cloud_sync
+            </span>
+            <h3 className="font-semibold text-sm sm:text-base text-[#191c20] dark:text-[#f8f9ff]">
+              {isSpanish ? 'Servidor Backend de IA' : 'AI Cloud Backend Server'}
+            </h3>
+          </div>
+          <p className="text-xs text-[#404940] dark:text-[#bfc9bd]">
+            {isSpanish
+              ? 'URL del servicio en la nube (Render) para llamadas a Gemini Vision y recetas:'
+              : 'Cloud service URL (Render) for Gemini Vision and recipe queries:'}
+          </p>
+
+          <div className="flex flex-col gap-2 mt-1">
+            <input
+              type="text"
+              value={backendUrl}
+              onChange={(e) => setBackendUrl(e.target.value)}
+              placeholder="https://pantryguard.onrender.com"
+              className="w-full px-3 py-2 text-xs rounded-xl border border-[#bfc9bd] dark:border-[#404940] bg-[#f8f9ff] dark:bg-[#2e3135] text-[#191c20] dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#004a21]"
+            />
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTestConnection}
+                disabled={isTestingServer}
+                className="flex-1 py-2 px-3 rounded-xl bg-[#f2f3f9] dark:bg-[#2e3135] hover:bg-[#e1e2e8] text-xs font-bold text-[#004a21] dark:text-[#87d897] border border-[#bfc9bd]/60 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+              >
+                <span className={`material-symbols-outlined text-[16px] ${isTestingServer ? 'animate-spin' : ''}`}>
+                  {isTestingServer ? 'sync' : 'network_check'}
                 </span>
-                <span>iPhone / iPad (Safari)</span>
-              </div>
-              <ol className="list-decimal list-inside text-[#404940] dark:text-[#bfc9bd] space-y-1 text-[11px] leading-relaxed">
-                <li>{preferences.language === 'es' ? 'Toca el botón Compartir en Safari' : 'Tap the Share button in Safari'} <span className="inline-block border border-gray-300 dark:border-gray-600 rounded px-1 text-[10px]">⎋</span></li>
-                <li>{preferences.language === 'es' ? 'Desliza y pulsa "Agregar al inicio"' : 'Scroll down & tap "Add to Home Screen"'}</li>
-                <li>{preferences.language === 'es' ? '¡Listo! Ábrela como app nativa' : 'Ready! Open it as a native app'}</li>
-              </ol>
+                <span>{isTestingServer ? (isSpanish ? 'Probando...' : 'Testing...') : (isSpanish ? 'Probar Conexión' : 'Test Connection')}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setBackendUrl(DEFAULT_BACKEND_URL)}
+                className="py-2 px-3 rounded-xl text-xs font-medium text-[#707a6f] hover:text-[#191c20] dark:hover:text-white"
+                title={isSpanish ? 'Restaurar URL oficial' : 'Reset URL'}
+              >
+                {isSpanish ? 'Restablecer' : 'Reset'}
+              </button>
             </div>
 
-            {/* Android Instructions */}
-            <div className="p-3.5 rounded-xl bg-[#f8f9ff] dark:bg-[#2e3135] border border-[#e1e2e8] dark:border-[#404940] flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5 font-bold text-[#191c20] dark:text-white">
-                <span className="material-symbols-outlined text-[#004a21] dark:text-[#87d897] text-[18px]">
-                  phone_android
+            {serverStatus && (
+              <div
+                className={`p-2.5 rounded-xl text-xs flex items-center gap-2 animate-in fade-in ${
+                  serverStatus.ok
+                    ? 'bg-[#e8f5e9] text-[#004a21] border border-[#c8e6c9]'
+                    : 'bg-[#fff3e0] text-[#9f4200] border border-[#ffe0b2]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[18px]">
+                  {serverStatus.ok ? 'check_circle' : 'info'}
                 </span>
-                <span>Android (Chrome / Edge)</span>
+                <span className="font-medium">{serverStatus.message}</span>
+                {serverStatus.latencyMs !== undefined && (
+                  <span className="text-[10px] opacity-75 font-mono ml-auto">({serverStatus.latencyMs}ms)</span>
+                )}
               </div>
-              <ol className="list-decimal list-inside text-[#404940] dark:text-[#bfc9bd] space-y-1 text-[11px] leading-relaxed">
-                <li>{preferences.language === 'es' ? 'Toca el menú de tres puntos (⋮)' : 'Tap the 3 dots menu (⋮)'}</li>
-                <li>{preferences.language === 'es' ? 'Selecciona "Instalar aplicación" o "Agregar a la pantalla principal"' : 'Select "Install app" or "Add to Home Screen"'}</li>
-                <li>{preferences.language === 'es' ? 'Disfruta de escaneo rápido y pantalla completa' : 'Enjoy quick scanning and full screen'}</li>
-              </ol>
-            </div>
+            )}
           </div>
         </section>
       </div>
 
-      {/* Save Button */}
+      {/* Save Button (Explicit Action) */}
       <div className="mt-2 flex justify-end">
         <button
+          type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="bg-[#004a21] hover:bg-[#096430] text-white text-xs font-semibold py-3 px-8 rounded-full shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2 w-full md:w-auto"
+          className="bg-[#004a21] hover:bg-[#096430] active:scale-95 text-white text-xs font-bold py-3.5 px-8 rounded-full shadow-md transition-all flex items-center justify-center gap-2 w-full sm:w-auto"
         >
           <span
             className={`material-symbols-outlined text-[18px] ${
@@ -260,7 +318,7 @@ export const PreferencesView: React.FC<PreferencesViewProps> = ({
           >
             {isSaving ? 'sync' : 'save'}
           </span>
-          <span>{isSaving ? (preferences.language === 'es' ? 'Guardando...' : 'Saving...') : t.preferences.saveChanges}</span>
+          <span>{isSaving ? (isSpanish ? 'Guardando...' : 'Saving...') : (isSpanish ? 'Guardar Preferencias' : 'Save Preferences')}</span>
         </button>
       </div>
     </div>

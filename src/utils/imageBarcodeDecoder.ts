@@ -8,6 +8,7 @@ import {
 } from '@zxing/library';
 import { BarcodeLookupResult, lookupBarcode, getEstimatedExpiryDate } from './barcodeService';
 import { ProductCategory, StorageLocation, UnitType } from '../types';
+import { apiUrl } from './apiConfig';
 
 export interface ImageDecodeResult {
   barcode: string;
@@ -188,7 +189,7 @@ export async function decodeBarcodeFromImageFile(
   try {
     const { base64, mimeType } = await fileToBase64Optimized(file, 1200);
 
-    const res = await fetch('/api/ai/scan-image', {
+    const res = await fetch(apiUrl('/api/ai/scan-image'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

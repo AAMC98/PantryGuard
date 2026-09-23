@@ -9,6 +9,7 @@ interface ShoppingListViewProps {
   onAddItem: (item: Omit<ShoppingItem, 'id'>) => void;
   onRemoveItem: (id: string) => void;
   onClearCompleted: () => void;
+  onMoveCheckedToPantry?: () => void;
   user: UserProfile;
   preferences: UserPreferences;
   onShowToast: (message: string) => void;
@@ -20,6 +21,7 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   onAddItem,
   onRemoveItem,
   onClearCompleted,
+  onMoveCheckedToPantry,
   user,
   preferences,
   onShowToast,
@@ -57,7 +59,7 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       category: newCustomCategory,
       quantity: 1,
       unit: 'unidades',
-      checked: true,
+      checked: false, // Items to buy start UNCHECKED!
       reason: 'manual',
     });
 
@@ -94,15 +96,16 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   };
 
   const getItemIcon = (item: ShoppingItem) => {
-    if (item.reason === 'expired') return 'warning';
-    if (item.name.toLowerCase().includes('huevo') || item.name.toLowerCase().includes('egg')) return 'egg';
-    if (item.name.toLowerCase().includes('manzana') || item.name.toLowerCase().includes('apple')) return 'schedule';
-    if (item.name.toLowerCase().includes('leche') || item.name.toLowerCase().includes('milk')) return 'warning';
-    if (item.name.toLowerCase().includes('arroz') || item.name.toLowerCase().includes('rice')) return 'rice_bowl';
-    if (item.name.toLowerCase().includes('avena') || item.name.toLowerCase().includes('oat')) return 'shopping_basket';
-    if (item.category === 'frutas') return 'nutrition';
-    if (item.category === 'lacteos') return 'lunch_dining';
+    const nameLower = item.name.toLowerCase();
+    if (nameLower.includes('leche') || nameLower.includes('milk') || item.category === 'bebidas') return 'local_drink';
+    if (nameLower.includes('huevo') || nameLower.includes('egg')) return 'egg';
+    if (nameLower.includes('manzana') || nameLower.includes('fruta') || item.category === 'frutas') return 'nutrition';
+    if (nameLower.includes('arroz') || nameLower.includes('rice')) return 'rice_bowl';
+    if (nameLower.includes('avena') || nameLower.includes('oat') || item.category === 'granos') return 'grain';
+    if (nameLower.includes('yogurt') || nameLower.includes('yogur')) return 'icecream';
+    if (item.category === 'lacteos') return 'egg';
     if (item.category === 'verduras') return 'eco';
+    if (item.category === 'proteinas') return 'restaurant';
     return 'shopping_basket';
   };
 
@@ -140,6 +143,34 @@ export const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           })}
         </div>
       </div>
+
+      {/* Banner if there are bought items: Move to Pantry */}
+      {safeItems.some((it) => it.checked) && onMoveCheckedToPantry && (
+        <div className="bg-[#004a21] text-white p-3.5 sm:p-4 rounded-2xl shadow-sm flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-[24px] text-[#87d897]">
+              inventory_2
+            </span>
+            <div>
+              <p className="text-xs font-bold">
+                {lang === 'es' ? '¿Ya compraste estos productos?' : 'Did you buy these items?'}
+              </p>
+              <p className="text-[11px] text-white/80">
+                {lang === 'es'
+                  ? 'Pásalos a tu despensa con un toque sin tener que escribirlos'
+                  : 'Add checked items directly to your pantry with one tap'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onMoveCheckedToPantry}
+            className="px-3.5 py-2 rounded-full bg-[#87d897] hover:bg-[#68c77b] text-[#00210b] font-bold text-xs shadow active:scale-95 transition-transform whitespace-nowrap flex items-center gap-1"
+          >
+            <span>{lang === 'es' ? '📥 Guardar en Despensa' : '📥 Save to Pantry'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Shopping List Bento Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5" id="shopping-list">

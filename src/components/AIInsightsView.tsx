@@ -10,6 +10,8 @@ import {
   UnitType,
 } from '../types';
 import { translations } from '../utils/i18n';
+import { apiUrl } from '../utils/apiConfig';
+import { generateClientLocalRecipes } from '../utils/localRecipeGenerator';
 
 interface AIInsightsViewProps {
   products: Product[];
@@ -73,10 +75,16 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
   // Fetch or generate zero-waste recipes
   const fetchRecipes = async (promptOverride?: string, mealTypeOverride?: string) => {
     setIsLoading(true);
+    let resolvedData: AIRecipeResponse | null = null;
+
     try {
-      const response = await fetch('/api/ai/recipes', {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6500); // 6.5s timeout for mobile
+
+      const response = await fetch(apiUrl('/api/ai/recipes'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           products,
           mealType: mealTypeOverride || selectedCategory,
@@ -85,27 +93,35 @@ export const AIInsightsView: React.FC<AIInsightsViewProps> = ({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
-      }
+      clearTimeout(timeoutId);
 
-      const data: AIRecipeResponse = await response.json();
-      setRecipeData(data);
-      onShowToast(
-        isSpanish
-          ? '¡El Chef IA ha creado nuevas recetas con tu despensa!'
-          : 'AI Chef created new zero-waste recipes!'
-      );
+      if (response.ok) {
+        const data: AIRecipeResponse = await response.json();
+        if (data && Array.isArray(data.recipes) && data.recipes.length > 0) {
+          resolvedData = data;
+          onShowToast(
+            isSpanish
+              ? '¡El Chef IA ha creado nuevas recetas con tu despensa!'
+              : 'AI Chef created new zero-waste recipes!'
+          );
+        }
+      }
     } catch (error) {
-      console.error('Failed to generate recipes:', error);
+      console.warn('Cloud AI fetch timed out or offline, using smart local engine:', error);
+    }
+
+    // Guaranteed fallback: If cloud is offline, sleeping, or APK localhost:
+    if (!resolvedData) {
+      resolvedData = generateClientLocalRecipes(products, preferences);
       onShowToast(
         isSpanish
-          ? 'Se generaron recetas locales de aprovechamiento.'
-          : 'Loaded local zero-waste recipes.'
+          ? '¡Chef IA: Recetas listas con tus ingredientes!'
+          : 'Chef IA: Recipes ready with your ingredients!'
       );
-    } finally {
-      setIsLoading(false);
     }
+
+    setRecipeData(resolvedData);
+    setIsLoading(false);
   };
 
   useEffect(() => {

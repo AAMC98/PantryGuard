@@ -21,7 +21,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   shoppingItemsCount = 0,
   shoppingCount = 0,
 }) => {
-  const t = translations[preferences?.language || 'es'];
+  const isSpanish = preferences?.language !== 'en';
   const count = shoppingCount || shoppingItemsCount || 0;
 
   const handleSelectTab = (tab: NavigationTab) => {
@@ -32,110 +32,138 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
     }
   };
 
-  // Determine which main tab is active if sub-views (household, preferences, account) are active
   const isDashboardActive = activeTab === 'dashboard';
   const isShoppingActive = activeTab === 'shopping';
   const isAIActive = activeTab === 'ai-insights';
-  const isProfileActive = activeTab === 'profile' || activeTab === 'preferences' || activeTab === 'household' || activeTab === 'account';
+  const isProfileActive =
+    activeTab === 'profile' ||
+    activeTab === 'preferences' ||
+    activeTab === 'household' ||
+    activeTab === 'account';
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 w-full z-40 bg-[#f8f9ff] dark:bg-[#191c20] shadow-[0_-2px_12px_rgba(0,0,0,0.06)] border-t border-[#e1e2e8]/80 dark:border-[#2e3135] h-[72px] pb-[env(safe-area-inset-bottom,0px)] flex items-center justify-around px-2">
-      {/* Dashboard */}
-      <button
-        onClick={() => handleSelectTab('dashboard')}
-        className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl w-20 transition-all duration-200 active:scale-90 ${
-          isDashboardActive
-            ? 'bg-[#096430] dark:bg-[#004a21] text-[#8dde9d] dark:text-[#a2f5b2] shadow-sm font-semibold'
-            : 'text-[#404940] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#2e3135]'
-        }`}
-      >
-        <span
-          className={`material-symbols-outlined mb-0.5 text-[24px] ${
-            isDashboardActive ? 'fill-icon' : ''
+    <nav className="fixed bottom-0 left-0 right-0 w-full z-40 bg-white/90 dark:bg-[#16181b]/92 backdrop-blur-xl border-t border-[#e1e2e8]/80 dark:border-white/10 shadow-[0_-4px_20px_rgba(0,0,0,0.04)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.3)] pb-[env(safe-area-inset-bottom,4px)] transition-all">
+      <div className="w-full max-w-lg mx-auto flex items-center justify-around px-2 py-1.5 h-16">
+        {/* Despensa */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('dashboard')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+            isDashboardActive
+              ? 'text-[#004a21] dark:text-[#87d897] font-bold'
+              : 'text-[#707a6f] dark:text-[#9ea79e] hover:text-[#191c20] dark:hover:text-white'
           }`}
-          data-icon="dashboard"
         >
-          dashboard
-        </span>
-        <span className="text-[11px] leading-tight font-medium">
-          {t.nav.dashboard}
-        </span>
-      </button>
-
-      {/* Compras */}
-      <button
-        onClick={() => handleSelectTab('shopping')}
-        className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl w-20 transition-all duration-200 active:scale-90 ${
-          isShoppingActive
-            ? 'bg-[#096430] dark:bg-[#004a21] text-[#8dde9d] dark:text-[#a2f5b2] shadow-sm font-semibold'
-            : 'text-[#404940] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#2e3135]'
-        }`}
-      >
-        <span
-          className={`material-symbols-outlined mb-0.5 text-[24px] ${
-            isShoppingActive ? 'fill-icon' : ''
-          }`}
-          data-icon="shopping_cart"
-        >
-          shopping_cart
-        </span>
-        <span className="text-[11px] leading-tight font-medium">
-          {t.nav.shopping}
-        </span>
-        {count > 0 && !isShoppingActive && (
-          <span className="absolute top-1 right-3 w-4 h-4 bg-[#ff7a2b] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {count > 9 ? '9+' : count}
+          <div
+            className={`w-10 h-7 rounded-full flex items-center justify-center transition-all ${
+              isDashboardActive ? 'bg-[#004a21]/12 dark:bg-[#87d897]/18' : 'bg-transparent'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[22px] transition-transform ${
+                isDashboardActive ? 'scale-110 font-bold' : ''
+              }`}
+            >
+              grid_view
+            </span>
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">
+            {isSpanish ? 'Despensa' : 'Pantry'}
           </span>
-        )}
-      </button>
+        </button>
 
-      {/* Chef & Recetas IA */}
-      <button
-        onClick={() => handleSelectTab('ai-insights')}
-        className={`relative flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl w-20 transition-all duration-200 active:scale-90 ${
-          isAIActive
-            ? 'bg-[#096430] dark:bg-[#004a21] text-[#8dde9d] dark:text-[#a2f5b2] shadow-sm font-semibold'
-            : 'text-[#404940] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#2e3135]'
-        }`}
-      >
-        <span
-          className={`material-symbols-outlined mb-0.5 text-[24px] ${
-            isAIActive ? 'fill-icon' : ''
+        {/* Compras */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('shopping')}
+          className={`relative flex flex-col items-center justify-center flex-1 py-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+            isShoppingActive
+              ? 'text-[#004a21] dark:text-[#87d897] font-bold'
+              : 'text-[#707a6f] dark:text-[#9ea79e] hover:text-[#191c20] dark:hover:text-white'
           }`}
-          data-icon="skillet"
         >
-          skillet
-        </span>
-        <span className="text-[11px] leading-tight font-medium truncate max-w-full">
-          {t.nav.aiInsights}
-        </span>
-        <span className="absolute -top-0.5 right-2 px-1 py-0.2 bg-[#003d87] dark:bg-[#a8c7fa] text-white dark:text-[#003d87] text-[8px] font-bold rounded-full uppercase">
-          Chef
-        </span>
-      </button>
+          <div
+            className={`w-10 h-7 rounded-full flex items-center justify-center relative transition-all ${
+              isShoppingActive ? 'bg-[#004a21]/12 dark:bg-[#87d897]/18' : 'bg-transparent'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[22px] transition-transform ${
+                isShoppingActive ? 'scale-110 font-bold' : ''
+              }`}
+            >
+              shopping_bag
+            </span>
+            {count > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#ff7a2b] text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
+                {count > 9 ? '9+' : count}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">
+            {isSpanish ? 'Compras' : 'Shopping'}
+          </span>
+        </button>
 
-      {/* Perfil */}
-      <button
-        onClick={() => handleSelectTab('profile')}
-        className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-2xl w-20 transition-all duration-200 active:scale-90 ${
-          isProfileActive
-            ? 'bg-[#096430] dark:bg-[#004a21] text-[#8dde9d] dark:text-[#a2f5b2] shadow-sm font-semibold'
-            : 'text-[#404940] dark:text-[#bfc9bd] hover:bg-[#e1e2e8] dark:hover:bg-[#2e3135]'
-        }`}
-      >
-        <span
-          className={`material-symbols-outlined mb-0.5 text-[24px] ${
-            isProfileActive ? 'fill-icon' : ''
+        {/* Chef IA (Recetas) */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('ai-insights')}
+          className={`relative flex flex-col items-center justify-center flex-1 py-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+            isAIActive
+              ? 'text-[#004a21] dark:text-[#87d897] font-bold'
+              : 'text-[#707a6f] dark:text-[#9ea79e] hover:text-[#191c20] dark:hover:text-white'
           }`}
-          data-icon="person"
         >
-          person
-        </span>
-        <span className="text-[11px] leading-tight font-medium">
-          {t.nav.profile}
-        </span>
-      </button>
+          <div
+            className={`w-10 h-7 rounded-full flex items-center justify-center relative transition-all ${
+              isAIActive ? 'bg-[#004a21]/12 dark:bg-[#87d897]/18' : 'bg-transparent'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[22px] transition-transform ${
+                isAIActive ? 'scale-110 font-bold' : ''
+              }`}
+            >
+              skillet
+            </span>
+            <span className="absolute -top-1 -right-2 px-1 py-0.2 bg-gradient-to-r from-[#004a21] to-[#003d87] text-[#87d897] text-[8px] font-black rounded-full shadow-sm">
+              IA
+            </span>
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">
+            {isSpanish ? 'Chef IA' : 'Chef AI'}
+          </span>
+        </button>
+
+        {/* Perfil */}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('profile')}
+          className={`flex flex-col items-center justify-center flex-1 py-1 rounded-2xl transition-all duration-200 active:scale-95 ${
+            isProfileActive
+              ? 'text-[#004a21] dark:text-[#87d897] font-bold'
+              : 'text-[#707a6f] dark:text-[#9ea79e] hover:text-[#191c20] dark:hover:text-white'
+          }`}
+        >
+          <div
+            className={`w-10 h-7 rounded-full flex items-center justify-center transition-all ${
+              isProfileActive ? 'bg-[#004a21]/12 dark:bg-[#87d897]/18' : 'bg-transparent'
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-[22px] transition-transform ${
+                isProfileActive ? 'scale-110 font-bold' : ''
+              }`}
+            >
+              person
+            </span>
+          </div>
+          <span className="text-[10px] tracking-tight mt-0.5">
+            {isSpanish ? 'Perfil' : 'Profile'}
+          </span>
+        </button>
+      </div>
     </nav>
   );
 };
-

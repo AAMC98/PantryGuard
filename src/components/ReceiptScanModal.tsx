@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { ProductCategory, StorageLocation, UnitType, UserPreferences } from '../types';
+import { apiUrl } from '../utils/apiConfig';
 
 export interface ReceiptParsedItem {
   id: string;
@@ -78,7 +79,7 @@ export const ReceiptScanModal: React.FC<ReceiptScanModalProps> = ({
     setParsedItems([]);
 
     try {
-      const response = await fetch('/api/ai/scan-receipt', {
+      const response = await fetch(apiUrl('/api/ai/scan-receipt'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

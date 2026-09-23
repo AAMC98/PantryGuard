@@ -184,7 +184,25 @@ export function exportInventoryPDF(
     );
   }
 
-  doc.save(`Pantry_Guard_Inventario_${new Date().toISOString().split('T')[0]}.pdf`);
+  const filename = `Pantry_Guard_Inventario_${new Date().toISOString().split('T')[0]}.pdf`;
+  try {
+    doc.save(filename);
+    
+    // In Android / mobile WebView fallback
+    const isMobile = typeof window !== 'undefined' && (/android|iphone|ipad/i.test(navigator.userAgent) || (window as any).Capacitor);
+    if (isMobile) {
+      const dataUri = doc.output('datauristring');
+      const a = document.createElement('a');
+      a.href = dataUri;
+      a.download = filename;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 500);
+    }
+  } catch {
+    doc.save(filename);
+  }
 }
 
 export function exportShoppingListPDF(
@@ -279,5 +297,21 @@ export function exportShoppingListPDF(
     startY += 12;
   });
 
-  doc.save(`Pantry_Guard_Compras_${new Date().toISOString().split('T')[0]}.pdf`);
+  const filename = `Pantry_Guard_Compras_${new Date().toISOString().split('T')[0]}.pdf`;
+  try {
+    doc.save(filename);
+    const isMobile = typeof window !== 'undefined' && (/android|iphone|ipad/i.test(navigator.userAgent) || (window as any).Capacitor);
+    if (isMobile) {
+      const dataUri = doc.output('datauristring');
+      const a = document.createElement('a');
+      a.href = dataUri;
+      a.download = filename;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 500);
+    }
+  } catch {
+    doc.save(filename);
+  }
 }
