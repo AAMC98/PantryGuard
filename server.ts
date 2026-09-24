@@ -1,4 +1,4 @@
-import express from 'express';
+﻿import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
@@ -27,11 +27,12 @@ function getGeminiClient() {
 // Fallback model chain and retry logic to handle 503 High Demand / 429 rate limit spikes smoothly
 // Only using active supported models per Google GenAI specifications
 const FALLBACK_MODELS = [
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-pro',
   'gemini-2.5-flash',
   'gemini-3.7-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-flash-latest',
-  'gemini-3.1-flash-lite',
+  'gemini-flash-latest'
 ];
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
